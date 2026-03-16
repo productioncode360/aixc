@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCQ Matrix — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="/socket.io/socket.io.js"></script>
+<style>
+:root{
+  --bg:#050b18;--s1:#0c1628;--s2:#111d35;--s3:#1a2844;
+  --border:#1e3050;--accent:#00d4ff;--purple:#7c3aed;
+  --green:#00e676;--red:#ff4444;--gold:#fbbf24;--orange:#f97316;
+  --text:#e2e8f0;--muted:#64748b;
+  --font:'Space Grotesk','Noto Sans Devanagari',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text)}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{width:270px;min-width:270px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s}
+.sb-head{padding:15px 13px 10px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#0c1628,#0f1f40);display:flex;align-items:center;justify-content:space-between}
+.sb-head h1{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent)}
+.sb-head p{font-size:10px;color:var(--muted);margin-top:1px}
+.sb-close{display:none;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.subject-tabs{display:flex;flex-wrap:wrap;gap:3px;padding:7px 8px;border-bottom:1px solid var(--border);background:var(--s2)}
+.stab{font-size:9px;font-weight:600;padding:3px 7px;border-radius:18px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase}
+.stab.active,.stab:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+.history-scroll{flex:1;overflow-y:auto;padding:7px}
+.history-scroll::-webkit-scrollbar{width:3px}
+.history-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.h-item{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:5px;cursor:pointer;transition:all .15s;position:relative}
+.h-item:hover{border-color:var(--accent);transform:translateX(2px)}
+.h-item.active{border-color:var(--accent);background:#0a1e3d}
+.h-topic{font-size:13px;font-weight:600}
+.h-meta{font-size:10px;color:var(--muted);margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.h-badge{font-size:9px;padding:1px 6px;border-radius:10px;background:var(--purple);color:#fff;font-weight:600}
+.h-actions{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.h-item:hover .h-actions{opacity:1}
+.h-del,.h-topic-del{background:none;border:none;cursor:pointer;font-size:13px;padding:3px 5px;border-radius:5px;transition:all .15s}
+.h-del{color:var(--muted)}
+.h-del:hover{color:var(--red);background:rgba(255,68,68,.1)}
+.h-topic-del{color:var(--muted);font-size:11px}
+.h-topic-del:hover{color:var(--orange);background:rgba(249,115,22,.1)}
+.stats-bar{display:flex;gap:10px;padding:8px 11px;border-top:1px solid var(--border);background:var(--s2)}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px}
+.nav-item:hover{background:var(--s3);border-color:var(--border)}
+.nav-name{font-size:13px;font-weight:600;color:var(--text)}
+.nav-count{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.stat-chip{font-size:10px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:3px}
+.stat-chip span{color:var(--accent);font-family:var(--mono)}
+
+/* MAIN */
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.topbar{display:none;align-items:center;gap:8px;padding:10px 13px;background:var(--s1);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.burger{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer}
+.topbar h2{font-size:14px;font-weight:700;color:var(--accent);flex:1}
+.topbar-btns{display:flex;gap:5px;align-items:center}
+.tai-btn{font-size:10px;font-weight:700;padding:5px 9px;border-radius:7px;border:1px solid;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tai-chat{background:rgba(124,58,237,.12);color:var(--purple);border-color:rgba(124,58,237,.3)}
+.tai-teacher{background:rgba(249,115,22,.12);color:var(--orange);border-color:rgba(249,115,22,.3)}
+.tai-news{background:rgba(0,212,255,.1);color:var(--accent);border-color:rgba(0,212,255,.2)}
+.tai-btn:hover{filter:brightness(1.3)}
+
+/* Bell */
+.bell-wrap{position:relative;cursor:pointer}
+.bell-btn{background:none;border:none;font-size:18px;cursor:pointer;padding:4px;color:var(--text);position:relative}
+.bell-badge{
+  position:absolute;top:-2px;right:-2px;
+  background:var(--red);color:#fff;
+  font-size:9px;font-weight:700;
+  min-width:16px;height:16px;
+  border-radius:8px;display:none;
+  align-items:center;justify-content:center;
+  padding:0 4px;font-family:var(--mono);
+}
+.bell-badge.show{display:flex}
+
+/* Desktop action bar */
+.desk-actions{display:flex;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--border);background:var(--s1)}
+.da-title{font-size:12px;font-weight:700;color:var(--accent);flex:1;letter-spacing:1px;text-transform:uppercase}
+.da-btn{font-size:11px;font-weight:700;padding:6px 11px;border-radius:7px;border:1px solid;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px}
+.da-chat{background:rgba(124,58,237,.12);color:var(--purple);border-color:rgba(124,58,237,.3)}
+.da-teacher{background:rgba(249,115,22,.12);color:var(--orange);border-color:rgba(249,115,22,.3)}
+.da-news{background:rgba(0,212,255,.1);color:var(--accent);border-color:rgba(0,212,255,.2)}
+.da-btn:hover{filter:brightness(1.3);transform:translateY(-1px)}
+
+/* Panel tabs */
+.panel-tabs{display:none;border-bottom:1px solid var(--border);background:var(--s1)}
+.ptab{flex:1;padding:9px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.ptab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+.panels{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.panel{padding:15px;overflow-y:auto;border-right:1px solid var(--border)}
+.panel:last-child{border-right:none}
+.panel::-webkit-scrollbar{width:3px}
+.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.panel-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.panel-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+textarea,input,select{width:100%;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s;margin-bottom:9px}
+textarea:focus,input:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:100px;line-height:1.5}
+select option{background:var(--s2)}
+.input-row{display:flex;gap:7px}
+.input-row input,.input-row select{margin-bottom:0}
+
+.btn{padding:10px 14px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.btn:active{transform:translateY(0)}
+.btn-full{width:100%;display:block;margin-bottom:8px}
+.btn-green{background:var(--green);color:#000}
+.btn-blue{background:var(--accent);color:#000}
+.btn-purple{background:var(--purple);color:#fff}
+
+.q-card{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:9px;padding:12px;margin-bottom:9px;animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.q-num{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:600;margin-bottom:4px;letter-spacing:1px}
+.q-text{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:8px}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.opt-box{background:var(--s1);padding:6px 9px;border-radius:5px;border:1px solid var(--border);font-size:11px;line-height:1.4}
+.ans-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px}
+#storyDisplay{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:15px;font-size:13px;line-height:1.8;white-space:pre-wrap;display:none;margin-top:9px}
+
+/* AI PANELS */
+.ai-panel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s;z-index:400}
+.ai-panel.open{right:0}
+.aip-head{padding:13px 15px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;background:var(--s2);flex-shrink:0}
+.aip-info{flex:1;min-width:0}
+.aip-title{font-size:14px;font-weight:700}
+.aip-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.aip-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:2px}
+.aip-close:hover{color:var(--red)}
+
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px}
+.chat-msgs::-webkit-scrollbar{width:3px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.cmsg{max-width:90%;padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.65;white-space:pre-wrap}
+.cmsg.user{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);align-self:flex-end;border-bottom-right-radius:3px}
+.cmsg.ai{background:var(--s2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:3px}
+.cmsg.typing{color:var(--muted)}
+.chat-inp-wrap{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:7px;background:var(--s2);flex-shrink:0}
+.chat-inp{flex:1;background:var(--s3);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-family:var(--font);font-size:13px;outline:none;resize:none;height:38px;max-height:90px;margin-bottom:0}
+.chat-inp:focus{border-color:var(--purple)}
+.chat-send{background:var(--purple);border:none;color:#fff;border-radius:8px;padding:8px 13px;font-size:15px;cursor:pointer;transition:all .15s}
+.chat-send:hover{filter:brightness(1.2)}
+
+/* Teacher */
+.teacher-config{padding:12px 15px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:7px;background:var(--s2);flex-shrink:0}
+.tc-row{display:flex;gap:7px}
+.tc-row select,.tc-row input{margin-bottom:0;flex:1}
+.tc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:3px}
+.tc-gen-btn{background:var(--orange);border:none;color:#fff;border-radius:8px;padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;width:100%}
+.tc-gen-btn:hover{filter:brightness(1.1)}
+.tc-gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.teacher-output{flex:1;overflow-y:auto;padding:12px}
+.teacher-output::-webkit-scrollbar{width:3px}
+.teacher-output::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.tq-box{background:var(--s2);border:1px solid var(--border);border-radius:10px;margin-bottom:11px;overflow:hidden;animation:fadeUp .3s ease both}
+.tq-header{padding:9px 12px;background:var(--s3);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.tq-num{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:600}
+.tq-type{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;text-transform:uppercase}
+.tq-type.mcq{background:rgba(0,212,255,.12);color:var(--accent)}
+.tq-type.tf{background:rgba(0,230,118,.12);color:var(--green)}
+.tq-type.fill{background:rgba(249,115,22,.12);color:var(--orange)}
+.tq-body{padding:11px 12px}
+.tq-q{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:9px}
+.tq-opts{display:flex;flex-direction:column;gap:5px;margin-bottom:9px}
+.tq-opt{background:var(--s1);padding:6px 9px;border-radius:6px;border:1px solid var(--border);font-size:12px;line-height:1.4}
+.tq-ans{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px;margin-bottom:6px}
+.tq-explain{font-size:11px;color:var(--muted);line-height:1.6;padding:7px 9px;background:rgba(255,255,255,.02);border-radius:6px;border:1px solid var(--border)}
+
+/* Notification Panel */
+#notifPanel{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s;z-index:450}
+#notifPanel.open{right:0}
+.notif-head{padding:13px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--s2);flex-shrink:0}
+.notif-head h3{font-size:14px;font-weight:700;color:var(--text)}
+.notif-actions{display:flex;gap:7px;align-items:center}
+.notif-clear{font-size:11px;font-weight:700;padding:4px 9px;border-radius:6px;background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.2);cursor:pointer}
+.notif-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+.notif-list{flex:1;overflow-y:auto;padding:10px}
+.notif-list::-webkit-scrollbar{width:3px}
+.notif-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.notif-item{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:7px;border-left:3px solid var(--accent)}
+.notif-item.news-type{border-left-color:var(--gold)}
+.notif-item.unread{background:#0a1e3d}
+.ni-msg{font-size:13px;font-weight:600;line-height:1.4}
+.ni-meta{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.ni-detail{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* News Panel */
+#newsPanel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s;z-index:400}
+#newsPanel.open{right:0}
+#newsViewAdd{display:none;flex:1;min-height:0;overflow:hidden;flex-direction:column}
+#newsViewAdd.active{display:flex}
+#newsViewDetail{display:none;flex:1;overflow-y:auto;padding:14px 15px;min-height:0}
+#newsViewDetail.active{display:block}
+#newsViewList{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.news-form{padding:14px 15px;background:var(--s2);flex:1;overflow-y:auto;min-height:0}
+.news-form::-webkit-scrollbar{width:3px}
+.news-form::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* News list items */
+.news-li{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .15s;position:relative}
+.news-li:hover{border-color:var(--accent);transform:translateX(2px)}
+.news-li-title{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:3px;padding-right:28px}
+.news-li-meta{font-size:10px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.news-li-mcq{font-size:9px;padding:1px 6px;border-radius:9px;background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.2);font-weight:700}
+.news-li-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s}
+.news-li:hover .news-li-del{opacity:1}
+.news-li-del:hover{color:var(--red)}
+/* Detail view */
+.nd-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:10px;line-height:1.3}
+.nd-para{font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:14px}
+.nd-mcq-item{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:9px;padding:12px;margin-bottom:9px}
+.nd-q{font-size:13px;font-weight:600;margin-bottom:8px;line-height:1.4}
+.nd-opts{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+.nd-opt{background:var(--s1);padding:6px 9px;border-radius:5px;border:1px solid var(--border);font-size:11px}
+.nd-ans{display:inline-flex;gap:4px;font-size:11px;font-weight:700;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px;margin-bottom:5px}
+.nd-exp{font-size:11px;color:var(--muted);line-height:1.5}
+.mcq-count-chip{padding:5px 11px;border-radius:18px;border:1px solid var(--border);background:var(--s2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--mono)}
+.mcq-count-chip:hover,.mcq-count-chip.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.news-ai-btn{background:linear-gradient(135deg,var(--purple),var(--orange));border:none;color:#fff;border-radius:8px;padding:10px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .15s;margin-top:4px}
+.news-ai-btn:hover{filter:brightness(1.1)}
+.news-form{padding:14px 15px;background:var(--s2);flex:1;overflow-y:auto;min-height:0}
+.news-form::-webkit-scrollbar{width:3px}
+.news-form::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.news-post-btn{background:var(--gold);border:none;color:#000;border-radius:8px;padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .15s}
+.news-post-btn:hover{filter:brightness(1.1)}
+.news-preview-box{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--text)}
+.news-mcq-item{background:var(--s3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:11px 13px;margin-bottom:8px}
+.nmi-q{font-size:13px;font-weight:600;margin-bottom:8px;line-height:1.4}
+.nmi-opts{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+.nmi-opt{background:var(--s2);padding:5px 8px;border-radius:5px;border:1px solid var(--border);font-size:11px}
+.nmi-ans{font-size:11px;font-weight:700;color:var(--green);display:inline-flex;align-items:center;gap:4px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px}
+.nmi-exp{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+.news-card{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:10px;position:relative;border-left:3px solid var(--gold)}
+.nc-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.nc-mcq-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(0,212,255,.12);color:var(--accent);border:1px solid rgba(0,212,255,.2);font-weight:700}
+.nc-body{font-size:12px;line-height:1.6;white-space:pre-wrap;color:var(--text)}
+.nc-meta{font-size:10px;color:var(--muted);margin-top:7px;font-family:var(--mono)}
+.nc-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s}
+.news-card:hover .nc-del{opacity:1}
+.nc-del:hover{color:var(--red)}
+.news-list::-webkit-scrollbar{width:3px}
+.news-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.news-card{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:10px;position:relative;border-left:3px solid var(--gold)}
+.nc-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.nc-body{font-size:13px;line-height:1.6;white-space:pre-wrap}
+.nc-meta{font-size:10px;color:var(--muted);margin-top:7px;font-family:var(--mono)}
+.nc-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s}
+.news-card:hover .nc-del{opacity:1}
+.nc-del:hover{color:var(--red)}
+.news-list{max-height:220px;overflow-y:auto;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg)}
+.news-list::-webkit-scrollbar{width:3px}
+.news-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#newsStep2{flex:1;overflow-y:auto;padding:14px 15px;min-height:0}
+#newsStep2::-webkit-scrollbar{width:3px}
+#newsStep2::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.news-list-toggle{padding:8px 15px;background:var(--s3);border-top:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;user-select:none}
+.news-list-toggle:hover{color:var(--accent)}
+
+#sbOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99}
+#aiOverlay{display:none;position:fixed;inset:0;z-index:399}
+#notifOverlay{display:none;position:fixed;inset:0;z-index:449}
+
+.loading{opacity:.6;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.empty{text-align:center;padding:30px 14px;color:var(--muted);font-size:13px}
+.empty-icon{font-size:26px;margin-bottom:7px}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;font-weight:700;font-size:13px;padding:9px 15px;border-radius:8px;transform:translateY(60px);opacity:0;transition:all .3s;z-index:999}
+#toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:900px){
+  .panels{grid-template-columns:1fr}
+  .panel{border-right:none;border-bottom:1px solid var(--border)}
+  .panel:last-child{border-bottom:none}
+  .panel.hidden{display:none}
+  .panel-tabs{display:flex}
+  .ai-panel,#newsPanel{width:100%;right:-100%}
+  #notifPanel{width:100%;right:-100%}
+}
+@media(max-width:700px){
+  .app{flex-direction:column;height:auto;min-height:100vh;overflow:auto}
+  #sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:200;width:280px}
+  #sidebar.open{transform:translateX(0)}
+  #sbOverlay.show{display:block}
+  .sb-close{display:block}
+  .topbar{display:flex}
+  .desk-actions{display:none}
+  #main{height:auto;overflow:visible}
+  .panels{height:auto;overflow:visible;display:block}
+  .panel{height:auto;overflow:visible}
+  .panel.hidden{display:none}
+  .panel-tabs{display:flex}
+  .input-row{flex-direction:column;gap:7px}
+  .input-row input,.input-row select{margin-bottom:0}
+  .opt-grid{grid-template-columns:1fr}
+  .ai-panel,#newsPanel,#notifPanel{width:100%;right:-100%}
+  #aiOverlay.show,#notifOverlay.show{display:block}
+  .tc-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div id="sbOverlay" onclick="closeSb()"></div>
+<div id="aiOverlay" onclick="closeAllAI()"></div>
+<div id="notifOverlay" onclick="closeNotif()"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sb-head">
+      <div><h1>MCQ Matrix</h1><p>Smart Question Bank</p></div>
+      <button class="sb-close" onclick="closeSb()">✕</button>
+    </div>
+    <div class="subject-tabs">
+      <button class="stab active" onclick="filterHistory('all',this)">All</button>
+      <button class="stab" onclick="filterHistory('history',this)">Hist</button>
+      <button class="stab" onclick="filterHistory('geography',this)">Geo</button>
+      <button class="stab" onclick="filterHistory('polity',this)">Pol</button>
+      <button class="stab" onclick="filterHistory('currentaffairs',this)">CA</button>
+      <button class="stab" onclick="filterHistory('maths',this)">Math</button>
+      <button class="stab" onclick="filterHistory('science',this)">Sci</button>
+      <button class="stab" onclick="filterHistory('economics',this)">Eco</button>
+      <button class="stab" onclick="filterHistory('other',this)">Gen</button>
+    </div>
+    <div class="history-scroll" id="historyList">
+      <div class="empty"><div class="empty-icon">📚</div>No records yet</div>
+    </div>
+    <!-- News quick links -->
+    <div style="padding:6px 8px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--s2)">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:4px 4px 6px;font-weight:600">News</div>
+      <div class="nav-item" style="margin-bottom:3px" onclick="openNews()">
+        <span class="nav-icon" style="font-size:15px">📰</span>
+        <div class="nav-info">
+          <div class="nav-name" style="font-size:12px">News Manager</div>
+          <div class="nav-count" id="adminNewsCount">Loading...</div>
+        </div>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-chip">Total: <span id="statTotal">0</span></div>
+      <div class="stat-chip">Questions: <span id="statQ">0</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <!-- Mobile topbar -->
+    <div class="topbar">
+      <button class="burger" onclick="openSb()">☰</button>
+      <h2>MCQ Matrix</h2>
+      <div class="topbar-btns">
+        <button class="tai-btn tai-chat" onclick="openChat()">💬</button>
+        <button class="tai-btn tai-teacher" onclick="openTeacher()">🤖</button>
+        <button class="tai-btn tai-news" onclick="openNews()">📰</button>
+        <div class="bell-wrap" onclick="openNotif()">
+          <button class="bell-btn">🔔</button>
+          <div class="bell-badge" id="bellBadge">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop action bar -->
+    <div class="desk-actions">
+      <span class="da-title">MCQ Matrix Pro</span>
+      <button class="da-btn da-chat" onclick="openChat()">💬 AI Chat</button>
+      <button class="da-btn da-teacher" onclick="openTeacher()">🤖 AI Teacher</button>
+      <button class="da-btn da-news" onclick="openNews()">📰 News</button>
+      <div class="bell-wrap" onclick="openNotif()">
+        <button class="bell-btn">🔔</button>
+        <div class="bell-badge" id="bellBadgeDesk">0</div>
+      </div>
+    </div>
+
+    <div class="panel-tabs">
+      <button class="ptab active" onclick="switchPanel(0,this)">⚡ Parse & Save</button>
+      <button class="ptab" onclick="switchPanel(1,this)">🧠 Explain</button>
+    </div>
+
+    <div class="panels">
+      <div class="panel" id="panel0">
+        <div class="panel-title">01 — Parse & Save</div>
+        <textarea id="userInput" placeholder="MCQ text yahan paste karein...&#10;Hindi ya English — koi bhi format"></textarea>
+        <button class="btn btn-green btn-full" onclick="processData()">⚡ Parse Now</button>
+        <div class="input-row" style="margin-bottom:9px">
+          <input type="text" id="topicName" placeholder="Topic name">
+          <select id="subjectSelect">
+            <option value="">Subject</option>
+            <option value="history">History</option>
+            <option value="geography">Geography</option>
+            <option value="polity">Polity & Governance</option>
+            <option value="currentaffairs">Current Affairs</option>
+            <option value="maths">Maths & Reasoning</option>
+            <option value="science">Science & Tech</option>
+            <option value="economics">Economics</option>
+            <option value="other">Other / General</option>
+          </select>
+        </div>
+        <button class="btn btn-blue btn-full" onclick="saveToDB()">💾 Save to MongoDB</button>
+        <div id="quizResult" style="margin-top:12px"></div>
+      </div>
+      <div class="panel" id="panel1">
+        <div class="panel-title">02 — Explain & Teach</div>
+        <select id="dbDropdown" onchange="loadFromDropdown()">
+          <option value="">-- Saved record choose karein --</option>
+        </select>
+        <button class="btn btn-purple btn-full" onclick="buildStory()">🧠 Create AI Guide</button>
+        <div id="storyDisplay"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI CHAT PANEL -->
+<div class="ai-panel" id="chatPanel">
+  <div class="aip-head">
+    <div class="aip-info">
+      <div class="aip-title" style="color:var(--purple)">💬 AI Chat</div>
+      <div class="aip-sub">Session mein yaad rakhega — cross = memory clear</div>
+    </div>
+    <button class="aip-close" onclick="closeChat()">✕</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="chat-inp-wrap">
+    <textarea class="chat-inp" id="chatInput" placeholder="Kuch poochho..." onkeydown="chatKey(event)"></textarea>
+    <button class="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<!-- AI TEACHER PANEL -->
+<div class="ai-panel" id="teacherPanel">
+  <div class="aip-head">
+    <div class="aip-info">
+      <div class="aip-title" style="color:var(--orange)">🤖 AI Teacher</div>
+      <div class="aip-sub">Subject + Topic → AI naye unique questions banayega</div>
+    </div>
+    <button class="aip-close" onclick="closeTeacher()">✕</button>
+  </div>
+  <div class="teacher-config">
+    <div>
+      <div class="tc-label">Subject</div>
+      <select id="tcSubject" onchange="loadTcTopics()">
+        <option value="">— Subject choose karo —</option>
+        <option value="history">History</option>
+        <option value="geography">Geography</option>
+        <option value="polity">Polity & Governance</option>
+        <option value="currentaffairs">Current Affairs</option>
+        <option value="maths">Maths & Reasoning</option>
+        <option value="science">Science & Tech</option>
+        <option value="economics">Economics</option>
+        <option value="other">Other / General</option>
+      </select>
+    </div>
+    <div>
+      <div class="tc-label">Topic <span id="tcQCount" style="color:var(--accent);font-family:var(--mono)"></span></div>
+      <select id="tcTopic"><option value="">— Pehle subject choose karo —</option></select>
+    </div>
+    <div class="tc-row">
+      <div style="flex:1"><div class="tc-label">Count</div><input type="number" id="tcCount" value="4" min="1" max="20" style="margin-bottom:0"></div>
+      <div style="flex:1"><div class="tc-label">Type</div>
+        <select id="tcType" style="margin-bottom:0">
+          <option value="mixed">Mixed</option>
+          <option value="mcq">Only MCQ</option>
+          <option value="fill">Only Fill</option>
+          <option value="tf">Only T/F</option>
+        </select>
+      </div>
+    </div>
+    <button class="tc-gen-btn" onclick="generateTeacherQ()" id="tcGenBtn">🚀 Generate Questions</button>
+  </div>
+  <div class="teacher-output" id="teacherOutput">
+    <div class="empty"><div class="empty-icon">🎓</div>Subject aur topic choose karo</div>
+  </div>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div id="notifPanel">
+  <div class="notif-head">
+    <h3>🔔 Notifications</h3>
+    <div class="notif-actions">
+      <button class="notif-clear" onclick="clearNotifs()">Mark all read</button>
+      <button class="notif-close" onclick="closeNotif()">✕</button>
+    </div>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div>
+  </div>
+</div>
+
+<!-- NEWS PANEL -->
+<div id="newsPanel">
+  <div class="aip-head" style="flex-shrink:0">
+    <div class="aip-info">
+      <div class="aip-title" style="color:var(--gold)" id="newsPanelTitle">📰 News Manager</div>
+      <div class="aip-sub" id="newsPanelSub">Saari news — filter, dekho, add karo</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button id="newsAddBtn" onclick="showNewsAdd()" style="font-size:11px;font-weight:700;padding:5px 11px;border-radius:7px;background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.3);cursor:pointer">+ Add</button>
+      <button class="aip-close" onclick="closeNews()">✕</button>
+    </div>
+  </div>
+
+  <!-- VIEW 1: News List (default) -->
+  <div id="newsViewList" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
+    <!-- Filters -->
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s2);display:flex;gap:7px;flex-shrink:0;flex-wrap:wrap">
+      <select id="newsFilterTopic" onchange="filterNews()" style="flex:1;min-width:120px;margin-bottom:0;padding:6px 9px;font-size:12px">
+        <option value="">All Topics</option>
+      </select>
+      <select id="newsFilterDate" onchange="filterNews()" style="flex:1;min-width:110px;margin-bottom:0;padding:6px 9px;font-size:12px">
+        <option value="">All Dates</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+    </div>
+    <div id="newsListItems" style="flex:1;overflow-y:auto;padding:10px 12px">
+      <div class="empty"><div class="empty-icon">📭</div>Loading...</div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: News Detail -->
+  <div id="newsViewDetail" style="display:none;flex:1;overflow-y:auto;padding:14px 15px;min-height:0">
+    <button onclick="showNewsList()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--s3);color:var(--muted);border:1px solid var(--border);cursor:pointer;margin-bottom:14px">← Back</button>
+    <div id="newsDetailContent"></div>
+  </div>
+
+  <!-- VIEW 3: Add News -->
+  <div id="newsViewAdd" style="display:none;flex:1;min-height:0;overflow:hidden;flex-direction:column">
+    <div class="news-form" style="flex:1;overflow-y:auto">
+      <button onclick="showNewsList()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--s3);color:var(--muted);border:1px solid var(--border);cursor:pointer;margin-bottom:12px">← Back to List</button>
+
+      <!-- STEP 1 -->
+      <div id="newsStep1">
+        <div class="tc-label">Title</div>
+        <input type="text" id="newsTitle" placeholder="News ka title...">
+        <div class="tc-label">Content (paragraph, MCQ, ya mix — kuch bhi)</div>
+        <textarea id="newsContent" placeholder="Yahan content daalo...&#10;AI isko better banayega aur MCQ alag karega." style="min-height:140px"></textarea>
+        <button class="news-ai-btn" onclick="aiProcessNews()" id="newsAiBtn">🤖 AI se Improve Karo</button>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="newsStep2" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green)">✅ AI Result</span>
+          <button onclick="newsReset()" style="font-size:11px;padding:3px 9px;border-radius:5px;background:rgba(255,107,107,.1);color:var(--red);border:1px solid rgba(255,107,107,.2);cursor:pointer">↩ Reset</button>
+        </div>
+        <div class="tc-label">📝 Improved Paragraph</div>
+        <div id="newsParagraphBox" class="news-preview-box" style="margin-bottom:12px"></div>
+
+        <div id="newsMcqSection">
+          <div id="newsMcqFound" style="display:none">
+            <div class="tc-label" style="display:flex;align-items:center;justify-content:space-between">
+              <span>❓ MCQs</span>
+              <span id="mcqCountLabel" style="color:var(--accent);font-family:var(--mono);font-size:11px"></span>
+            </div>
+            <div id="newsMcqBoxes"></div>
+          </div>
+          <div id="newsMcqAsk" style="display:none">
+            <div style="background:var(--s3);border:1px solid var(--border);border-radius:9px;padding:13px">
+              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">❓ MCQ banana hai?</div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:11px">Is paragraph se SSC/UPSC level MCQs generate karo</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <div style="display:flex;gap:5px">
+                  <button class="mcq-count-chip active" onclick="setMcqCount(this,2)">2</button>
+                  <button class="mcq-count-chip" onclick="setMcqCount(this,4)">4</button>
+                  <button class="mcq-count-chip" onclick="setMcqCount(this,6)">6</button>
+                  <button class="mcq-count-chip" onclick="setMcqCount(this,10)">10</button>
+                  <input type="number" id="mcqCustomCount" placeholder="?" min="1" max="20" style="width:50px;padding:4px 7px;font-size:12px;margin-bottom:0;border-radius:6px" oninput="setMcqCount(null,this.value)">
+                </div>
+                <button id="genMcqBtn" class="tc-gen-btn" style="flex:1;padding:8px 12px;font-size:12px" onclick="genMcqFromParagraph()">⚡ Banao</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="news-post-btn" onclick="postNews()" style="margin-top:14px;margin-bottom:8px">📢 Save & Post</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════
+// SOCKET.IO
+// ═══════════════════════
+const socket = io();
+let unreadCount = 0;
+
+socket.on("new_notification", (notif) => {
+  unreadCount++;
+  updateBell();
+  prependNotif(notif);
+});
+
+function updateBell() {
+  ["bellBadge","bellBadgeDesk"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = unreadCount > 99 ? "99+" : unreadCount;
+    el.classList.toggle("show", unreadCount > 0);
+  });
+}
+
+function prependNotif(n) {
+  const list = document.getElementById("notifList");
+  const empty = list.querySelector(".empty");
+  if (empty) empty.remove();
+  const d = new Date(n.savedAt);
+  const div = document.createElement("div");
+  div.className = "notif-item unread" + (n.type === "news" ? " news-type" : "");
+  div.innerHTML = `<div class="ni-msg">${n.message}</div>
+    <div class="ni-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>`;
+  list.prepend(div);
+}
+
+// ═══════════════════════
+// STATE
+// ═══════════════════════
+let currentQA = null, allHistory = [], activeFilter = "all", chatHistory = [];
+
+// ═══════════════════════
+// SIDEBAR
+// ═══════════════════════
+function openSb(){document.getElementById("sidebar").classList.add("open");document.getElementById("sbOverlay").classList.add("show")}
+function closeSb(){document.getElementById("sidebar").classList.remove("open");document.getElementById("sbOverlay").classList.remove("show")}
+function switchPanel(idx,btn){
+  document.querySelectorAll(".panel").forEach((p,i)=>p.classList.toggle("hidden",i!==idx));
+  document.querySelectorAll(".ptab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+// ═══════════════════════
+// AI PANELS
+// ═══════════════════════
+function closeAllAI(){["chatPanel","teacherPanel","newsPanel"].forEach(id=>document.getElementById(id).classList.remove("open"));document.getElementById("aiOverlay").classList.remove("show")}
+function openChat(){closeAllAI();document.getElementById("chatPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show");if(!chatHistory.length)renderChatMsgs();document.getElementById("chatInput").focus()}
+function closeChat(){document.getElementById("chatPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show");chatHistory=[];document.getElementById("chatMsgs").innerHTML=""}
+function openTeacher(){closeAllAI();document.getElementById("teacherPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show")}
+function closeTeacher(){document.getElementById("teacherPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show")}
+function openNews(){closeAllAI();document.getElementById("newsPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show");fetchNews();showNewsList();}
+function closeNews(){document.getElementById("newsPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show")}
+
+// ═══════════════════════
+// NOTIFICATION PANEL
+// ═══════════════════════
+function openNotif(){
+  document.getElementById("notifPanel").classList.add("open");
+  document.getElementById("notifOverlay").classList.add("show");
+  unreadCount=0; updateBell();
+  document.querySelectorAll(".notif-item.unread").forEach(el=>el.classList.remove("unread"));
+}
+function closeNotif(){document.getElementById("notifPanel").classList.remove("open");document.getElementById("notifOverlay").classList.remove("show")}
+async function clearNotifs(){
+  await fetch("/api/notifications/clear",{method:"POST"});
+  document.getElementById("notifList").innerHTML='<div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div>';
+  unreadCount=0; updateBell();
+}
+async function fetchNotifs(){
+  const res = await fetch("/api/notifications");
+  const notifs = await res.json();
+  const list = document.getElementById("notifList");
+  if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div>';return;}
+  list.innerHTML = notifs.map(n=>{
+    const d = new Date(n.savedAt);
+    const isUnread = !n.readBy?.includes("all");
+    return `<div class="notif-item${isUnread?" unread":""}${n.type==="news"?" news-type":""}">
+      <div class="ni-msg">${n.message}</div>
+      ${n.count?`<div class="ni-detail">${n.count} questions</div>`:""}
+      <div class="ni-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>
+    </div>`;
+  }).join("");
+  const unread = notifs.filter(n=>!n.readBy?.includes("all")).length;
+  if(unread>0){unreadCount=unread;updateBell();}
+}
+
+function toggleNewsList(){}
+
+// ═══════════════════════
+// NEWS — 3 View System
+// ═══════════════════════
+let newsProcessed={paragraph:"",mcqs:[]};
+let selectedMcqCount=2;
+let allNewsData=[];
+
+function showNewsList(){
+  document.getElementById("newsViewList").style.display="flex";
+  document.getElementById("newsViewDetail").style.display="none";
+  document.getElementById("newsViewAdd").style.display="none";
+  document.getElementById("newsPanelSub").textContent="Saari news — filter, dekho, add karo";
+  document.getElementById("newsAddBtn").style.display="inline-block";
+}
+function showNewsAdd(){
+  document.getElementById("newsViewList").style.display="none";
+  document.getElementById("newsViewDetail").style.display="none";
+  document.getElementById("newsViewAdd").style.display="flex";
+  document.getElementById("newsPanelSub").textContent="Title + content → AI improve karega";
+  document.getElementById("newsAddBtn").style.display="none";
+  newsReset();
+}
+function showNewsDetail(news){
+  document.getElementById("newsViewList").style.display="none";
+  document.getElementById("newsViewAdd").style.display="none";
+  document.getElementById("newsViewDetail").style.display="block";
+  document.getElementById("newsPanelSub").textContent=news.title||"News Detail";
+  document.getElementById("newsAddBtn").style.display="none";
+  const d=new Date(news.savedAt);
+  const mcqSection=news.hasMcq&&news.mcqs&&news.mcqs.length?`
+    <div style="margin-top:16px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">❓ ${news.mcqs.length} MCQs</div>
+      ${news.mcqs.map((q,i)=>`
+        <div class="nd-mcq-item">
+          <div class="nd-q">Q${i+1}. ${q.question}</div>
+          <div class="nd-opts">${(q.options||[]).map(o=>`<div class="nd-opt">${o}</div>`).join("")}</div>
+          <div class="nd-ans">✓ ${q.answer}</div>
+          ${q.explanation?`<div class="nd-exp">💡 ${q.explanation}</div>`:""}
+        </div>`).join("")}
+    </div>`:`<div style="font-size:12px;color:var(--muted);margin-top:12px;padding:10px 12px;background:var(--s2);border-radius:8px">Koi MCQ nahi</div>`;
+  document.getElementById("newsDetailContent").innerHTML=`
+    <div class="nd-title">${news.title||"(No title)"}</div>
+    <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>
+    ${news.content?`<div class="nd-para">${news.content}</div>`:""}
+    ${mcqSection}
+    <button onclick="deleteNewsById('${news._id}')" style="margin-top:16px;font-size:11px;font-weight:700;padding:6px 14px;border-radius:7px;background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.2);cursor:pointer">🗑️ Delete</button>`;
+}
+
+function filterNews(){
+  const topicVal=document.getElementById("newsFilterTopic").value;
+  const dateVal=document.getElementById("newsFilterDate").value;
+  let filtered=[...allNewsData];
+  if(topicVal) filtered=filtered.filter(n=>n.title===topicVal);
+  if(dateVal){
+    const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const week=new Date(today);week.setDate(today.getDate()-7);
+    const month=new Date(today);month.setDate(today.getDate()-30);
+    if(dateVal==="today") filtered=filtered.filter(n=>new Date(n.savedAt)>=today);
+    else if(dateVal==="week") filtered=filtered.filter(n=>new Date(n.savedAt)>=week);
+    else if(dateVal==="month") filtered=filtered.filter(n=>new Date(n.savedAt)>=month);
+  }
+  renderNewsList(filtered);
+}
+
+function renderNewsList(list){
+  const el=document.getElementById("newsListItems");
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div>Koi news nahi</div>';return;}
+  el.innerHTML=list.map(n=>{
+    const d=new Date(n.savedAt);
+    const badge=n.hasMcq?`<span class="news-li-mcq">${n.mcqs?.length||0} MCQ</span>`:"";
+    const ns=JSON.stringify(n).replace(/\\/g,"\\\\").replace(/`/g,"\\`").replace(/\$/g,"\\$");
+    return `<div class="news-li" onclick='showNewsDetail(${ns})'>
+      <div class="news-li-title">${n.title||"(No title)"}</div>
+      <div class="news-li-meta">${badge}<span>${d.toLocaleDateString("hi-IN")}</span><span>${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</span></div>
+      <button class="news-li-del" onclick="event.stopPropagation();deleteNewsById('${n._id}')">✕</button>
+    </div>`;
+  }).join("");
+}
+
+async function deleteNewsById(id){
+  if(!confirm("Delete?")) return;
+  await fetch("/api/news/"+id,{method:"DELETE"});
+  await fetchNews();
+  showNewsList();
+}
+function setMcqCount(btn,val){
+  selectedMcqCount=parseInt(val)||2;
+  document.querySelectorAll(".mcq-count-chip").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+}
+function newsReset(){
+  newsProcessed={paragraph:"",mcqs:[]};
+  document.getElementById("newsStep1").style.display="block";
+  document.getElementById("newsStep2").style.display="none";
+  document.getElementById("newsTitle").value="";
+  document.getElementById("newsContent").value="";
+}
+async function aiProcessNews(){
+  const title=document.getElementById("newsTitle").value.trim();
+  const content=document.getElementById("newsContent").value.trim();
+  if(!content) return showToast("Content daalo pehle!");
+  const btn=document.getElementById("newsAiBtn");
+  btn.textContent="⏳ AI improve kar raha hai..."; btn.disabled=true;
+  try{
+    const res=await fetch("/api/news/ai-process",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content})});
+    if(!res.ok) throw new Error("Server error "+res.status);
+    const d=await res.json();
+    newsProcessed={paragraph:d.paragraph||"",mcqs:d.mcqs||[]};
+    document.getElementById("newsStep1").style.display="none";
+    document.getElementById("newsStep2").style.display="block";
+    document.getElementById("newsParagraphBox").textContent=newsProcessed.paragraph;
+    if(newsProcessed.mcqs.length){
+      document.getElementById("newsMcqFound").style.display="block";
+      document.getElementById("newsMcqAsk").style.display="none";
+      document.getElementById("mcqCountLabel").textContent=newsProcessed.mcqs.length+" MCQs";
+      renderMcqBoxes(newsProcessed.mcqs);
+    } else {
+      document.getElementById("newsMcqFound").style.display="none";
+      document.getElementById("newsMcqAsk").style.display="block";
+    }
+    showToast("✅ AI ne improve kar diya!");
+  }catch(e){ showToast("❌ "+e.message); console.error(e); }
+  btn.textContent="🤖 AI se Improve Karo"; btn.disabled=false;
+}
+function renderMcqBoxes(mcqs){
+  document.getElementById("newsMcqBoxes").innerHTML=mcqs.map((q,i)=>`
+    <div class="news-mcq-item">
+      <div class="nmi-q">Q${i+1}. ${q.question}</div>
+      <div class="nmi-opts">${(q.options||[]).map(o=>`<div class="nmi-opt">${o}</div>`).join("")}</div>
+      <div class="nmi-ans">✓ ${q.answer}</div>
+      ${q.explanation?`<div class="nmi-exp">💡 ${q.explanation}</div>`:""}
+    </div>`).join("");
+}
+async function genMcqFromParagraph(){
+  const btn=document.getElementById("genMcqBtn");
+  btn.textContent="⏳ Bana raha hoon..."; btn.disabled=true;
+  try{
+    const res=await fetch("/api/news/gen-mcq",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paragraph:newsProcessed.paragraph,count:selectedMcqCount})});
+    const d=await res.json();
+    newsProcessed.mcqs=d.mcqs||[];
+    document.getElementById("newsMcqAsk").style.display="none";
+    document.getElementById("newsMcqFound").style.display="block";
+    document.getElementById("mcqCountLabel").textContent=newsProcessed.mcqs.length+" MCQs";
+    renderMcqBoxes(newsProcessed.mcqs);
+    showToast(`✅ ${newsProcessed.mcqs.length} MCQs ban gaye!`);
+  }catch(e){ showToast("❌ "+e.message); }
+  btn.textContent="⚡ Banao"; btn.disabled=false;
+}
+async function fetchNews(){
+  const res=await fetch("/api/news");
+  allNewsData=await res.json();
+  const topicSel=document.getElementById("newsFilterTopic");
+  if(topicSel){
+    const titles=[...new Set(allNewsData.map(n=>n.title).filter(Boolean))];
+    topicSel.innerHTML='<option value="">All Topics</option>'+titles.map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join("");
+  }
+  const cnt=document.getElementById("adminNewsCount");
+  if(cnt) cnt.textContent=allNewsData.length+" news";
+  renderNewsList(allNewsData);
+}
+async function postNews(){
+  const title=document.getElementById("newsTitle").value.trim()||"News "+new Date().toLocaleDateString("hi-IN");
+  const{paragraph,mcqs}=newsProcessed;
+  if(!paragraph) return showToast("Paragraph khaali hai!");
+  const res=await fetch("/api/news",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content:paragraph,mcqs})});
+  if(res.ok){ showToast("📰 Posted! ✅"); await fetchNews(); showNewsList(); }
+}
+async function deleteNews(id){ await deleteNewsById(id); }
+
+// ═══════════════════════
+// AI CHAT
+// ═══════════════════════
+function renderChatMsgs(){
+  const el = document.getElementById("chatMsgs");
+  if(!chatHistory.length){el.innerHTML='<div class="cmsg ai">Haan bolo! Koi bhi subject, topic poochho. Poori baat yaad rakhunga. 🎓</div>';return;}
+  el.innerHTML = chatHistory.map(m=>`<div class="cmsg ${m.role==="user"?"user":"ai"}">${m.content}</div>`).join("");
+  el.scrollTop = el.scrollHeight;
+}
+async function sendChat(){
+  const inp = document.getElementById("chatInput");
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value=""; inp.style.height="38px";
+  chatHistory.push({role:"user",content:text});
+  renderChatMsgs();
+  const msgs = document.getElementById("chatMsgs");
+  const t = document.createElement("div");
+  t.className="cmsg ai typing"; t.id="ctyping"; t.textContent="Soch raha hoon...";
+  msgs.appendChild(t); msgs.scrollTop=msgs.scrollHeight;
+  try{
+    const res = await fetch("/api/admin/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:chatHistory})});
+    const d = await res.json();
+    document.getElementById("ctyping")?.remove();
+    chatHistory.push({role:"assistant",content:d.reply});
+    renderChatMsgs();
+  }catch(e){document.getElementById("ctyping")?.remove();chatHistory.push({role:"assistant",content:"Error."});renderChatMsgs();}
+}
+function chatKey(e){
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}
+  const inp=document.getElementById("chatInput");
+  inp.style.height="38px"; inp.style.height=Math.min(inp.scrollHeight,90)+"px";
+}
+
+// ═══════════════════════
+// AI TEACHER
+// ═══════════════════════
+async function loadTcTopics(){
+  const sub = document.getElementById("tcSubject").value;
+  const topicSel = document.getElementById("tcTopic");
+  document.getElementById("tcQCount").textContent="";
+  if(!sub){topicSel.innerHTML='<option value="">— Pehle subject choose karo —</option>';return;}
+  topicSel.innerHTML='<option value="">Loading...</option>';
+  const res = await fetch(`/api/public/topics/${sub}`);
+  const topics = await res.json();
+  const total = topics.reduce((s,t)=>s+t.count,0);
+  document.getElementById("tcQCount").textContent=`(${total}Q)`;
+  topicSel.innerHTML='<option value="__all__">All Topics</option>'+topics.map(t=>`<option value="${escH(t.topic)}">${t.topic} (${t.count}Q)</option>`).join("");
+}
+async function generateTeacherQ(){
+  const sub=document.getElementById("tcSubject").value;
+  const topic=document.getElementById("tcTopic").value;
+  const count=parseInt(document.getElementById("tcCount").value)||4;
+  const type=document.getElementById("tcType").value;
+  if(!sub) return showToast("Subject choose karo!");
+  const btn=document.getElementById("tcGenBtn");
+  btn.textContent="⏳ Generating..."; btn.disabled=true;
+  let existingQs=[];
+  try{
+    const params=new URLSearchParams({subject:sub});
+    const hr=await fetch("/api/history?"+params);
+    const hd=await hr.json();
+    const filtered=topic&&topic!=="__all__"?hd.filter(r=>r.topic===topic):hd;
+    existingQs=filtered.flatMap(r=>r.data?.map(q=>q.question)||[]);
+  }catch(e){}
+  try{
+    const res=await fetch("/api/admin/teacher",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:sub,topic:topic==="__all__"?null:topic,count,type,existingQuestions:existingQs})});
+    const d=await res.json();
+    renderTeacherOutput(d.questions);
+  }catch(e){document.getElementById("teacherOutput").innerHTML=`<div class="empty"><div class="empty-icon">❌</div>Error</div>`;}
+  btn.textContent="🚀 Generate Questions"; btn.disabled=false;
+}
+function renderTeacherOutput(questions){
+  const out=document.getElementById("teacherOutput");
+  if(!questions||!questions.length){out.innerHTML='<div class="empty"><div class="empty-icon">🤔</div>Koi questions nahi bane</div>';return;}
+  out.innerHTML=questions.map((q,i)=>{
+    const tl={mcq:"MCQ",tf:"True/False",fill:"Fill in Blank"}[q.type]||"MCQ";
+    const tc={mcq:"mcq",tf:"tf",fill:"fill"}[q.type]||"mcq";
+    const opts=q.options?.length?`<div class="tq-opts">${q.options.map(o=>`<div class="tq-opt">${o}</div>`).join("")}</div>`:"";
+    return `<div class="tq-box" style="animation-delay:${i*0.06}s">
+      <div class="tq-header"><span class="tq-num">Q ${String(i+1).padStart(2,"0")}</span><span class="tq-type ${tc}">${tl}</span></div>
+      <div class="tq-body">
+        <div class="tq-q">${q.question}</div>
+        ${opts}
+        <div class="tq-ans">✓ ${q.answer}</div>
+        ${q.explanation?`<div class="tq-explain">💡 ${q.explanation}</div>`:""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ═══════════════════════
+// PARSE
+// ═══════════════════════
+async function processData(){
+  const text=document.getElementById("userInput").value.trim();
+  if(!text) return;
+  const btn=event.target;
+  btn.textContent="⏳ Parsing..."; btn.classList.add("loading");
+  try{
+    const res=await fetch("/process",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+    const result=await res.json();
+    currentQA=result.qa; renderQuiz(currentQA);
+  }catch(e){alert("Parsing failed: "+e.message);}
+  btn.textContent="⚡ Parse Now"; btn.classList.remove("loading");
+}
+function renderQuiz(qaList){
+  const div=document.getElementById("quizResult");
+  if(!qaList||!qaList.length){div.innerHTML='<div class="empty"><div class="empty-icon">🤔</div>No questions found</div>';return;}
+  div.innerHTML=qaList.map((q,i)=>`
+    <div class="q-card" style="animation-delay:${i*0.04}s">
+      <div class="q-num">Q ${String(i+1).padStart(2,"0")}</div>
+      <div class="q-text">${q.question}</div>
+      <div class="opt-grid">${q.options.map(o=>`<div class="opt-box">${o}</div>`).join("")}</div>
+      <div class="ans-tag">✓ ${q.answer}</div>
+    </div>`).join("");
+}
+
+// ═══════════════════════
+// SAVE
+// ═══════════════════════
+async function saveToDB(){
+  if(!currentQA) return alert("Pehle data parse karein!");
+  const topic=document.getElementById("topicName").value.trim()||"Untitled";
+  const subject=document.getElementById("subjectSelect").value||"other";
+  const res=await fetch("/api/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic,subject,data:currentQA})});
+  if(res.ok){showToast("Saved! ✅");fetchHistory();}
+}
+
+// ═══════════════════════
+// HISTORY
+// ═══════════════════════
+async function fetchHistory(){
+  const res=await fetch("/api/history");
+  allHistory=await res.json();
+  renderHistory(allHistory);
+  populateDropdown(allHistory);
+}
+function filterHistory(sub,btn){
+  activeFilter=sub;
+  document.querySelectorAll(".stab").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderHistory(sub==="all"?allHistory:allHistory.filter(h=>h.subject===sub));
+}
+function renderHistory(list){
+  document.getElementById("statTotal").textContent=list.length;
+  document.getElementById("statQ").textContent=list.reduce((s,h)=>s+(h.data?.length||0),0);
+  const div=document.getElementById("historyList");
+  if(!list.length){div.innerHTML='<div class="empty"><div class="empty-icon">📂</div>Koi record nahi</div>';return;}
+  const B={history:"Hist",geography:"Geo",polity:"Pol",currentaffairs:"CA",maths:"Math",science:"Sci",economics:"Eco",other:"Gen"};
+  div.innerHTML=list.map(item=>{
+    const d=new Date(item.savedAt);
+    return `<div class="h-item" onclick="loadRecord('${item._id}')">
+      <div class="h-topic">${item.topic}</div>
+      <div class="h-meta">
+        <span class="h-badge">${B[item.subject]||"Gen"}</span>
+        ${item.data?.length||0}Q •
+        ${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}
+      </div>
+      <div class="h-actions">
+        <button class="h-topic-del" onclick="deleteByTopic(event,'${item.subject}','${escH(item.topic)}')" title="Delete all '${escH(item.topic)}' questions">🗑️ Topic</button>
+        <button class="h-del" onclick="deleteRec(event,'${item._id}')" title="Delete this record only">✕</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+function populateDropdown(list){
+  const drop=document.getElementById("dbDropdown");
+  drop.innerHTML='<option value="">-- Saved record choose karein --</option>';
+  list.forEach(item=>{
+    const opt=document.createElement("option");
+    opt.value=JSON.stringify(item.data);
+    opt.textContent=`[${(item.subject||"").toUpperCase()}] ${item.topic}`;
+    drop.appendChild(opt);
+  });
+}
+function loadRecord(id){
+  const item=allHistory.find(h=>h._id===id);
+  if(!item) return;
+  currentQA=item.data; renderQuiz(item.data);
+  document.querySelectorAll(".h-item").forEach(el=>el.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  if(window.innerWidth<=900) switchPanel(0,document.querySelectorAll(".ptab")[0]);
+  closeSb();
+}
+function loadFromDropdown(){
+  const val=document.getElementById("dbDropdown").value;
+  if(val){currentQA=JSON.parse(val);renderQuiz(currentQA);}
+}
+async function deleteRec(e,id){
+  e.stopPropagation();
+  if(!confirm("Delete this record?")) return;
+  await fetch("/api/history/"+id,{method:"DELETE"});
+  fetchHistory();
+}
+async function deleteByTopic(e,subject,topic){
+  e.stopPropagation();
+  if(!confirm(`"${topic}" ke saare records delete karein? Yeh sirf is topic ka content hatayega.`)) return;
+  const res=await fetch("/api/topic",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject,topic})});
+  const d=await res.json();
+  showToast(`${d.deleted} records deleted ✅`);
+  fetchHistory();
+}
+
+// ═══════════════════════
+// STORY
+// ═══════════════════════
+async function buildStory(){
+  if(!currentQA) return alert("Pehle koi topic select karein!");
+  const btn=event.target;
+  btn.textContent="⏳ Generating..."; btn.classList.add("loading");
+  const res=await fetch("/story",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:currentQA})});
+  const result=await res.json();
+  const sd=document.getElementById("storyDisplay");
+  sd.textContent=result.story; sd.style.display="block";
+  btn.textContent="🧠 Create AI Guide"; btn.classList.remove("loading");
+}
+
+// ═══════════════════════
+// HELPERS
+// ═══════════════════════
+function escH(s){return (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/'/g,"&#39;")}
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2500);
+}
+
+window.onload=()=>{fetchHistory();fetchNotifs();};
+</script>
+</body>
+</html>
