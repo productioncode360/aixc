@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCQ Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030508;--s1:#080e1a;--s2:#0e1828;--s3:#162035;
+  --border:#1d2e47;--accent:#00f5d4;--blue:#4dabf7;
+  --purple:#b57bee;--gold:#fbbf24;--red:#ff4d6d;--green:#06d6a0;
+  --orange:#f97316;--pink:#f472b6;
+  --text:#e2eaf4;--muted:#4a6080;
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:0}
+
+/* HEADER */
+.hdr{background:var(--s1);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.hdr-logo{font-size:22px;font-weight:800;letter-spacing:-0.5px;color:var(--accent)}
+.hdr-sub{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.hdr-right{display:flex;gap:10px;align-items:center}
+.refresh-btn{background:rgba(0,245,212,.1);border:1px solid rgba(0,245,212,.3);color:var(--accent);border-radius:8px;padding:7px 14px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.refresh-btn:hover{background:rgba(0,245,212,.2)}
+.clear-btn{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);color:var(--red);border-radius:8px;padding:7px 14px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.clear-btn:hover{background:rgba(255,77,109,.18)}
+.last-refresh{font-size:10px;color:var(--muted);font-family:var(--mono)}
+
+/* LAYOUT */
+.wrap{max-width:1400px;margin:0 auto;padding:24px 28px}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card:hover{border-color:var(--accent)}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.sc-tavily::after{background:var(--gold)}
+.sc-groq::after{background:var(--purple)}
+.sc-tokens::after{background:var(--blue)}
+.sc-total::after{background:var(--accent)}
+.sc-today-t::after{background:var(--gold);opacity:.5}
+.sc-today-g::after{background:var(--purple);opacity:.5}
+.stat-icon{font-size:20px;margin-bottom:10px}
+.stat-val{font-size:32px;font-weight:800;font-family:var(--mono);line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+
+/* SECTION GRID */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--s2)}
+.card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--accent)}
+.card-count{font-size:11px;font-family:var(--mono);color:var(--muted);background:var(--s3);padding:2px 8px;border-radius:10px}
+.card-body{padding:14px 18px;max-height:340px;overflow-y:auto}
+.card-body::-webkit-scrollbar{width:3px}
+.card-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* BAR ROWS */
+.bar-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.bar-row:last-child{border-bottom:none}
+.br-label{font-size:12px;font-weight:600;min-width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.br-bar-wrap{flex:1;height:6px;background:var(--s3);border-radius:3px;overflow:hidden}
+.br-bar{height:100%;border-radius:3px;transition:width .6s ease}
+.br-val{font-size:10px;font-family:var(--mono);color:var(--muted);min-width:40px;text-align:right}
+.br-badges{display:flex;gap:4px;flex-shrink:0}
+.br-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px}
+.bb-t{background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.25)}
+.bb-g{background:rgba(181,123,238,.12);color:var(--purple);border:1px solid rgba(181,123,238,.25)}
+
+/* RECENT TABLE */
+.rtable{width:100%;border-collapse:collapse;font-size:11px}
+.rtable th{padding:7px 10px;text-align:left;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-size:9px;background:var(--s2)}
+.rtable td{padding:8px 10px;border-bottom:1px solid rgba(29,46,71,.5);vertical-align:middle}
+.rtable tr:last-child td{border-bottom:none}
+.rtable tr:hover td{background:rgba(0,245,212,.02)}
+.rt-q{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.rt-type{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px}
+.rt-t{background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.25)}
+.rt-g{background:rgba(181,123,238,.12);color:var(--purple);border:1px solid rgba(181,123,238,.25)}
+.rt-sec{font-size:9px;padding:2px 6px;border-radius:4px;background:var(--s3);color:var(--muted)}
+.rt-ep{font-size:9px;color:var(--muted);font-family:var(--mono)}
+.rt-tok{font-family:var(--mono);font-size:10px;color:var(--blue)}
+.rt-time{font-size:9px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+
+/* SUBJECT TABLE */
+.subj-table{width:100%;border-collapse:collapse;font-size:11px}
+.subj-table th{padding:7px 10px;text-align:left;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);font-size:9px;background:var(--s2)}
+.subj-table td{padding:7px 10px;border-bottom:1px solid rgba(29,46,71,.4);vertical-align:middle}
+.subj-table tr:last-child td{border-bottom:none}
+.subj-row:hover{background:rgba(0,245,212,.02);cursor:pointer}
+.subj-row.expanded{background:rgba(0,245,212,.03)}
+.subj-expand{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;transition:transform .2s}
+.subj-expand.open{transform:rotate(90deg)}
+.topic-row{background:var(--s2);display:none}
+.topic-row.show{display:table-row}
+.topic-row td{padding:5px 10px 5px 30px;font-size:10px;color:var(--muted);border-bottom:1px solid rgba(29,46,71,.3)}
+
+/* ENDPOINT PILLS */
+.ep-grid{display:flex;flex-wrap:wrap;gap:8px;padding:4px 0}
+.ep-pill{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:8px}
+.ep-name{font-size:12px;font-weight:700;color:var(--text)}
+.ep-count{font-size:14px;font-weight:800;font-family:var(--mono);color:var(--accent)}
+.ep-lbl{font-size:9px;color:var(--muted);text-transform:uppercase}
+
+/* TOKEN TOP */
+.tok-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(29,46,71,.4)}
+.tok-item:last-child{border-bottom:none}
+.tok-rank{font-size:10px;font-family:var(--mono);color:var(--muted);width:18px;flex-shrink:0}
+.tok-q{flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.tok-val{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--blue);flex-shrink:0}
+
+/* FULL WIDTH CARD */
+.full-card{margin-bottom:16px}
+
+/* LOADING */
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+.loading-spin{font-size:24px;animation:spin 1s linear infinite;display:block;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.empty{text-align:center;padding:30px;color:var(--muted);font-size:12px}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--accent);color:#000;font-weight:700;font-size:12px;padding:8px 14px;border-radius:8px;opacity:0;transform:translateY(20px);transition:all .3s;z-index:999}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.err{background:var(--red);color:#fff}
+
+@media(max-width:600px){
+  .wrap{padding:14px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .hdr{padding:12px 16px}
+  .rtable td:nth-child(3),.rtable th:nth-child(3){display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <div>
+      <div class="hdr-logo">📊 MCQ Analytics</div>
+      <div class="hdr-sub">API Usage · Token Tracking · Subject Stats</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span class="last-refresh" id="lastRefresh">—</span>
+    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+    <button class="clear-btn" onclick="clearAnalytics()">🗑 Clear</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid" id="statGrid">
+    <div class="loading"><span class="loading-spin">⏳</span>Loading...</div>
+  </div>
+
+  <!-- ROW 1 -->
+  <div class="dash-grid">
+    <!-- By Section -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">By Section</span>
+        <span class="card-count" id="secCount">—</span>
+      </div>
+      <div class="card-body" id="secBars"><div class="loading"><span class="loading-spin">⏳</span></div></div>
+    </div>
+
+    <!-- By Endpoint -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">By Endpoint</span>
+      </div>
+      <div class="card-body" id="epBars"><div class="loading"><span class="loading-spin">⏳</span></div></div>
+    </div>
+  </div>
+
+  <!-- TOP TOKENS + RECENT -->
+  <div class="dash-grid">
+    <!-- Top token questions -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">🔥 Top Token Users</span>
+        <span class="card-count">per question</span>
+      </div>
+      <div class="card-body" id="topTokens"><div class="loading"><span class="loading-spin">⏳</span></div></div>
+    </div>
+
+    <!-- Recent hits -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">⚡ Recent Hits</span>
+        <span class="card-count" id="recentCount">last 20</span>
+      </div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table class="rtable" id="recentTable">
+          <thead><tr><th>Type</th><th>Question</th><th>Section</th><th>Tokens</th><th>Time</th></tr></thead>
+          <tbody id="recentBody"><tr><td colspan="5" class="loading"><span class="loading-spin">⏳</span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBJECTS FULL WIDTH -->
+  <div class="card full-card">
+    <div class="card-head">
+      <span class="card-title">📚 Subjects & Topics</span>
+      <span class="card-count" id="subjCount">—</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="subj-table" id="subjTable">
+        <thead>
+          <tr>
+            <th style="width:32px"></th>
+            <th>Subject</th>
+            <th>Total Q</th>
+            <th>🌐 Tavily (T)</th>
+            <th>🤖 Groq (G)</th>
+            <th>T%</th>
+          </tr>
+        </thead>
+        <tbody id="subjBody"><tr><td colspan="6" class="loading"><span class="loading-spin">⏳</span>Loading subjects...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+let summaryData = null;
+let subjectsData = null;
+
+async function loadAll() {
+  document.getElementById("lastRefresh").textContent = "Loading...";
+  await Promise.all([loadSummary(), loadSubjects()]);
+  document.getElementById("lastRefresh").textContent = "Updated: " + new Date().toLocaleTimeString("en-IN");
+}
+
+async function loadSummary() {
+  try {
+    const res = await fetch("/api/analytics/summary");
+    summaryData = await res.json();
+    renderStatCards(summaryData);
+    renderSecBars(summaryData.bySection || []);
+    renderEndpoints(summaryData.byEndpoint || []);
+    renderTopTokens(summaryData.topTokens || []);
+    renderRecent(summaryData.recent || []);
+  } catch(e) {
+    showToast("Error loading summary: " + e.message, true);
+  }
+}
+
+async function loadSubjects() {
+  try {
+    const res = await fetch("/api/analytics/subjects");
+    subjectsData = await res.json();
+    renderSubjects(subjectsData);
+  } catch(e) {
+    showToast("Error loading subjects: " + e.message, true);
+  }
+}
+
+function renderStatCards(d) {
+  const grid = document.getElementById("statGrid");
+  const cards = [
+    { cls:"sc-total",  icon:"📡", val: d.total || 0,         lbl:"Total API Hits",    sub:"all time" },
+    { cls:"sc-tavily", icon:"🌐", val: d.tavilyTotal || 0,   lbl:"Tavily Hits (T)",   sub:`Today: ${d.tavilyToday||0}` },
+    { cls:"sc-groq",   icon:"🤖", val: d.groqTotal || 0,     lbl:"Groq Hits (G)",     sub:`Today: ${d.groqToday||0}` },
+    { cls:"sc-tokens", icon:"🪙", val: fmtNum(d.totalTokens||0), lbl:"Total Tokens",  sub:"Groq consumed" },
+    { cls:"sc-today-t",icon:"📅", val: d.tavilyToday || 0,  lbl:"Tavily Today",       sub:"since midnight" },
+    { cls:"sc-today-g",icon:"📅", val: d.groqToday || 0,    lbl:"Groq Today",         sub:"since midnight" },
+  ];
+  grid.innerHTML = cards.map(c => `
+    <div class="stat-card ${c.cls}">
+      <div class="stat-icon">${c.icon}</div>
+      <div class="stat-val" style="color:${getCardColor(c.cls)}">${c.val}</div>
+      <div class="stat-lbl">${c.lbl}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join("");
+}
+
+function getCardColor(cls) {
+  const map = { "sc-total":"var(--accent)", "sc-tavily":"var(--gold)", "sc-groq":"var(--purple)", "sc-tokens":"var(--blue)", "sc-today-t":"var(--gold)", "sc-today-g":"var(--purple)" };
+  return map[cls] || "var(--accent)";
+}
+
+function renderSecBars(sections) {
+  const el = document.getElementById("secBars");
+  document.getElementById("secCount").textContent = sections.length + " sections";
+  if (!sections.length) { el.innerHTML = '<div class="empty">No data yet</div>'; return; }
+  const max = Math.max(...sections.map(s => s.count));
+  const colors = { Reasoning:"#00d4ff", "General Awareness":"#fbbf24", "Quantitative Aptitude":"#06d6a0", English:"#b57bee", "":"#4dabf7" };
+  el.innerHTML = sections.map(s => {
+    const col = colors[s._id] || "var(--accent)";
+    const pct = max ? Math.round(s.count / max * 100) : 0;
+    return `<div class="bar-row">
+      <div class="br-label" title="${s._id||'Unknown'}">${secShort(s._id)}</div>
+      <div class="br-bar-wrap"><div class="br-bar" style="width:${pct}%;background:${col}"></div></div>
+      <div class="br-badges">
+        <span class="br-badge bb-t">T:${s.tavily||0}</span>
+        <span class="br-badge bb-g">G:${s.groq||0}</span>
+      </div>
+      <div class="br-val">${s.count}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderEndpoints(endpoints) {
+  const el = document.getElementById("epBars");
+  if (!endpoints.length) { el.innerHTML = '<div class="empty">No data yet</div>'; return; }
+  const max = Math.max(...endpoints.map(e => e.count));
+  el.innerHTML = `<div class="ep-grid">` + endpoints.map(e => `
+    <div class="ep-pill">
+      <div>
+        <div class="ep-name">${e._id || "unknown"}</div>
+        <div class="ep-lbl">endpoint</div>
+      </div>
+      <div>
+        <div class="ep-count">${e.count}</div>
+        <div class="ep-lbl">hits</div>
+      </div>
+    </div>`).join("") + `</div>` +
+    `<div style="margin-top:12px">` + endpoints.map(e => {
+      const pct = max ? Math.round(e.count / max * 100) : 0;
+      return `<div class="bar-row">
+        <div class="br-label">${e._id || "unknown"}</div>
+        <div class="br-bar-wrap"><div class="br-bar" style="width:${pct}%;background:var(--accent)"></div></div>
+        <div class="br-val">${e.count}</div>
+      </div>`;
+    }).join("") + `</div>`;
+}
+
+function renderTopTokens(tokens) {
+  const el = document.getElementById("topTokens");
+  if (!tokens.length) { el.innerHTML = '<div class="empty">No token data yet</div>'; return; }
+  el.innerHTML = tokens.map((t, i) => `
+    <div class="tok-item">
+      <span class="tok-rank">#${i+1}</span>
+      <span class="tok-q" title="${escH(t.question)}">${escH(t.question || "(no question)")}</span>
+      <span class="tok-val">${t.tokens} tok</span>
+    </div>`).join("");
+}
+
+function renderRecent(recent) {
+  const tbody = document.getElementById("recentBody");
+  if (!recent.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No hits yet</td></tr>'; return; }
+  const secColors = { Reasoning:"#00d4ff", "General Awareness":"#fbbf24", "Quantitative Aptitude":"#06d6a0", English:"#b57bee" };
+  tbody.innerHTML = recent.map(r => {
+    const d = new Date(r.hitAt);
+    const timeStr = d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true});
+    const dateStr = d.toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+    const col = secColors[r.section] || "var(--muted)";
+    return `<tr>
+      <td><span class="rt-type ${r.tavilyHit?'rt-t':'rt-g'}">${r.tavilyHit?'T':'G'}</span></td>
+      <td class="rt-q" title="${escH(r.question)}">${escH(r.question||"—")}</td>
+      <td><span class="rt-sec" style="color:${col}">${secShort(r.section)}</span></td>
+      <td class="rt-tok">${r.tokens||0}</td>
+      <td class="rt-time">${timeStr}<br><span style="font-size:8px">${dateStr}</span></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderSubjects(subjects) {
+  const tbody = document.getElementById("subjBody");
+  document.getElementById("subjCount").textContent = subjects.length + " subjects";
+  if (!subjects.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No subjects found</td></tr>'; return; }
+  let html = "";
+  subjects.forEach((s, si) => {
+    const tPct = s.totalQ ? Math.round(s.tavilyQ / s.totalQ * 100) : 0;
+    html += `<tr class="subj-row" onclick="toggleTopics(${si})">
+      <td><button class="subj-expand" id="exp-${si}">▶</button></td>
+      <td><strong>${s.label}</strong> <span style="font-size:9px;color:var(--muted);font-family:var(--mono)">${s.key}</span></td>
+      <td><strong style="font-family:var(--mono)">${s.totalQ}</strong></td>
+      <td><span style="color:var(--gold);font-family:var(--mono);font-weight:700">${s.tavilyQ}</span></td>
+      <td><span style="color:var(--purple);font-family:var(--mono);font-weight:700">${s.groqQ}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden;min-width:50px">
+            <div style="height:100%;width:${tPct}%;background:var(--gold);border-radius:2px"></div>
+          </div>
+          <span style="font-size:10px;font-family:var(--mono);color:var(--gold)">${tPct}%</span>
+        </div>
+      </td>
+    </tr>`;
+    // Topic rows
+    (s.topics || []).forEach(t => {
+      const tpct = t.count ? Math.round(t.tavily / t.count * 100) : 0;
+      html += `<tr class="topic-row" id="trow-${si}-${escId(t.topic)}">
+        <td></td>
+        <td colspan="1" style="padding-left:28px;font-size:11px">📁 ${escH(t.topic)}</td>
+        <td style="font-family:var(--mono);font-size:11px">${t.count}</td>
+        <td style="color:var(--gold);font-family:var(--mono);font-size:11px">${t.tavily} <span style="font-size:9px" class="br-badge bb-t">T</span></td>
+        <td style="color:var(--purple);font-family:var(--mono);font-size:11px">${t.groq} <span style="font-size:9px" class="br-badge bb-g">G</span></td>
+        <td style="font-size:10px;color:var(--muted)">${tpct}% T</td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML = html;
+}
+
+function toggleTopics(si) {
+  const expBtn = document.getElementById("exp-"+si);
+  const rows = document.querySelectorAll(`[id^="trow-${si}-"]`);
+  const isOpen = expBtn.classList.contains("open");
+  expBtn.classList.toggle("open");
+  rows.forEach(r => r.classList.toggle("show"));
+}
+
+async function clearAnalytics() {
+  if (!confirm("Saara analytics data clear karein?")) return;
+  try {
+    await fetch("/api/analytics/clear", { method: "DELETE" });
+    showToast("✅ Analytics cleared!");
+    loadAll();
+  } catch(e) { showToast("Error: " + e.message, true); }
+}
+
+// Helpers
+function secShort(s) {
+  const m = { "Reasoning":"Reasoning", "General Awareness":"GK", "Quantitative Aptitude":"Quant", "English":"English" };
+  return m[s] || s || "Unknown";
+}
+function fmtNum(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1)+"M";
+  if (n >= 1000) return (n/1000).toFixed(1)+"K";
+  return n;
+}
+function escH(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function escId(s){ return (s||"").replace(/[^a-zA-Z0-9]/g,"_").slice(0,20); }
+function showToast(msg, err=false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "show" + (err?" err":"");
+  setTimeout(() => t.className = "", 3000);
+}
+
+// Auto-refresh every 30s
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>

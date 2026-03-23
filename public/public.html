@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MCQ Quiz Portal</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#07090f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Quiz Portal">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
 <style>
@@ -12,6 +20,7 @@
   --border:#2a3550; --accent:#4fffb0; --a2:#ff6b6b; --a3:#ffd93d;
   --blue:#4dabf7; --purple:#a78bfa; --text:#e6edf3; --muted:#58697e;
   --font:'Syne','Noto Sans Devanagari',sans-serif; --mono:'IBM Plex Mono',monospace;
+  --c-reas:#00d4ff; --c-gk:#fbbf24; --c-quant:#00e676; --c-eng:#c77dff;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -45,10 +54,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 #main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
 #main::-webkit-scrollbar{width:4px}
 #main::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-.mobile-topbar{display:none;align-items:center;gap:10px;padding:11px 14px;background:var(--s1);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90}
-.burger{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px}
-.mobile-topbar h2{font-size:15px;font-weight:700;color:var(--accent);flex:1}
-.mobile-chat-btn{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--purple);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer}
+
+/* FIX 5: Mobile topbar — timer properly shown */
+.mobile-topbar{display:none;align-items:center;gap:8px;padding:9px 12px;background:var(--s1);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;flex-wrap:nowrap;min-height:48px}
+.burger{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0}
+.mobile-topbar h2{font-size:13px;font-weight:700;color:var(--accent);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mobile-topbar-right{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.mobile-timer-badge{font-family:var(--mono);font-size:12px;font-weight:700;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;white-space:nowrap;display:none}
+.mobile-timer-badge.danger{color:var(--a2);border-color:var(--a2);animation:tpulse .5s infinite}
+.mobile-chat-btn{background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);color:var(--purple);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
+.pwa-install-btn{display:none;align-items:center;gap:4px;background:rgba(79,255,176,.15);border:1px solid rgba(79,255,176,.4);color:var(--accent);border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;animation:fadeIn .3s ease}
 
 /* HOME */
 #screen-home{padding:28px 24px;max-width:880px;width:100%;margin:0 auto}
@@ -103,6 +118,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .modal-btn{width:100%;padding:12px;border:none;border-radius:9px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;background:var(--accent);color:#000;transition:all .15s;margin-top:4px}
 .modal-btn:hover{filter:brightness(1.1)}
 
+/* SECTION FILTER CHIPS */
+.sec-filter-chips{display:flex;flex-wrap:wrap;gap:6px}
+.sec-chip{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--s2);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px}
+.sec-chip:hover{filter:brightness(1.2)}
+.sec-chip.active-all{background:var(--accent);color:#000;border-color:var(--accent)}
+.sec-chip.active-reas{background:rgba(0,212,255,.15);color:var(--c-reas);border-color:var(--c-reas)}
+.sec-chip.active-gk{background:rgba(251,191,36,.15);color:var(--c-gk);border-color:var(--c-gk)}
+.sec-chip.active-quant{background:rgba(0,230,118,.15);color:var(--c-quant);border-color:var(--c-quant)}
+.sec-chip.active-eng{background:rgba(199,119,255,.15);color:var(--c-eng);border-color:var(--c-eng)}
+
 /* QUIZ */
 #screen-quiz{display:none;flex-direction:column;min-height:100%}
 .quiz-header{position:sticky;top:0;background:var(--s1);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:12px;z-index:50;flex-wrap:wrap}
@@ -128,34 +153,59 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .q-dot.current{background:var(--accent);color:#000;border-color:var(--accent)}
 .quiz-body{flex:1;padding:18px;max-width:740px;width:100%;margin:0 auto}
 .q-num-tag{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.q-num-left{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .q-ai-btns{display:flex;gap:6px;flex-wrap:wrap}
+
+/* SECTION BADGE */
+.q-sec-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:.5px;text-transform:uppercase;border:1px solid}
+.qsb-reas{background:rgba(0,212,255,.12);color:var(--c-reas);border-color:rgba(0,212,255,.3)}
+.qsb-gk{background:rgba(251,191,36,.12);color:var(--c-gk);border-color:rgba(251,191,36,.3)}
+.qsb-quant{background:rgba(0,230,118,.12);color:var(--c-quant);border-color:rgba(0,230,118,.3)}
+.qsb-eng{background:rgba(199,119,255,.12);color:var(--c-eng);border-color:rgba(199,119,255,.3)}
+.qsb-other{background:rgba(88,105,126,.15);color:var(--muted);border-color:var(--border)}
+
 .ai-short-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(79,255,176,.08);color:var(--accent);border:1px solid rgba(79,255,176,.2);cursor:pointer;transition:all .15s;font-family:var(--font)}
 .ai-short-btn:hover{background:rgba(79,255,176,.18)}
 .ai-chat-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(167,139,250,.08);color:var(--purple);border:1px solid rgba(167,139,250,.2);cursor:pointer;transition:all .15s;font-family:var(--font)}
 .ai-chat-btn:hover{background:rgba(167,139,250,.2)}
 .q-text-quiz{font-size:15px;font-weight:600;line-height:1.55;margin-bottom:16px}
 .options-list{display:flex;flex-direction:column;gap:8px}
+
+/* FIX 3 & 4: Option button — always clickable until submit, color-coded by auto-check+color */
 .option-btn{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:11px 14px;text-align:left;font-family:var(--font);font-size:13px;color:var(--text);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;width:100%}
-.option-btn:hover{border-color:var(--blue);background:rgba(77,171,247,.06)}
-.option-btn.selected{border-color:var(--accent);background:rgba(79,255,176,.08);color:var(--accent)}
-.option-btn.selected .opt-lbl{background:var(--accent);color:#000}
+.option-btn:hover:not(.locked){border-color:var(--blue);background:rgba(77,171,247,.06)}
+.option-btn.opt-correct{border-color:var(--accent)!important;background:rgba(79,255,176,.1)!important}
+.option-btn.opt-correct .opt-lbl{background:var(--accent)!important;color:#000!important}
+.option-btn.opt-wrong{border-color:var(--a2)!important;background:rgba(255,107,107,.08)!important}
+.option-btn.opt-wrong .opt-lbl{background:var(--a2)!important;color:#fff!important}
+.option-btn.opt-selected-nocolor{border-color:var(--blue);background:rgba(77,171,247,.08)}
+.option-btn.opt-selected-nocolor .opt-lbl{background:var(--blue);color:#000}
 .opt-lbl{width:22px;height:22px;border-radius:5px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--mono);flex-shrink:0;color:var(--muted);transition:all .15s}
 
 /* SHORT EXPLAIN inline */
 .short-exp-box{margin-top:12px;padding:10px 13px;background:rgba(79,255,176,.05);border:1px solid rgba(79,255,176,.15);border-radius:8px;font-size:12px;line-height:1.6;color:var(--text);display:none;animation:fadeIn .2s ease}
+.src-badge{display:inline-flex;align-items:center;font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;letter-spacing:.5px;margin-bottom:6px}
+.src-badge.groq{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.src-badge.tavily{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+.qa-src-tag{font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;margin-left:4px;vertical-align:middle;display:none}
+.qa-src-tag.g{display:inline;background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.qa-src-tag.t{display:inline;background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.4)}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
-/* AUTO FEEDBACK */
-.auto-feedback{margin-top:10px;padding:12px 14px;border-radius:9px;font-size:13px;line-height:1.6;display:none;animation:fadeIn .25s ease;border-left:3px solid}
+/* FIX 3: Auto feedback — no AI, just correct/wrong indicator */
+.auto-feedback{margin-top:10px;padding:10px 14px;border-radius:9px;font-size:13px;line-height:1.6;display:none;animation:fadeIn .25s ease;border-left:3px solid}
 .auto-feedback.correct{background:rgba(79,255,176,.07);border-color:var(--accent)}
 .auto-feedback.wrong{background:rgba(255,107,107,.07);border-color:var(--a2)}
-.fb-header{font-weight:700;font-size:12px;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.fb-header{font-weight:700;font-size:12px;margin-bottom:0;display:flex;align-items:center;gap:6px}
 .fb-header.c{color:var(--accent)}
 .fb-header.w{color:var(--a2)}
-.fb-explain{font-size:12px;color:var(--text);opacity:.85;margin-top:4px}
 
-/* Q cards scroll layout */
-.q-card-quiz{background:var(--s1);border:1px solid var(--border);border-radius:13px;padding:20px;margin-bottom:16px;scroll-margin-top:20px;animation:slideIn .22s ease}
+/* Q card scroll layout */
+.q-card-quiz{background:var(--s1);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:13px;padding:20px;margin-bottom:16px;scroll-margin-top:20px;animation:slideIn .22s ease}
+.q-card-quiz.sec-reas{border-left-color:var(--c-reas)}
+.q-card-quiz.sec-gk{border-left-color:var(--c-gk)}
+.q-card-quiz.sec-quant{border-left-color:var(--c-quant)}
+.q-card-quiz.sec-eng{border-left-color:var(--c-eng)}
 @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .quiz-nav{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);background:var(--s1);width:100%;position:sticky;bottom:0;justify-content:flex-end}
 .btn{padding:10px 18px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
@@ -235,6 +285,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 .ob-feat-text strong{color:var(--accent);display:block;font-size:13px;margin-bottom:2px}
 .ob-start-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#000;font-family:var(--font);font-size:15px;font-weight:800;cursor:pointer;transition:all .15s;letter-spacing:.3px}
 .ob-start-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+
+/* NEWS ARTICLES PANEL */
 #newsArticlesPanel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s;z-index:310}
 #newsArticlesPanel.open{right:0}
 .pub-article-card{background:var(--s2);border:1px solid var(--border);border-left:3px solid #fbbf24;border-radius:10px;padding:14px;margin-bottom:12px}
@@ -294,6 +346,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   #sidebar.open{transform:translateX(0)}
   #sideOverlay.show{display:block}
   .mobile-topbar{display:flex}
+  /* FIX 5: Hide desktop quiz-header timer on mobile, show mobile timer badge instead */
+  #screen-quiz .quiz-header .timer-wrap{display:none}
+  .mobile-timer-badge{display:flex;align-items:center;gap:4px}
   #main{height:auto;overflow:visible}
   #screen-home{padding:14px}
   .home-hero h2{font-size:20px}
@@ -322,6 +377,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   <div class="sb-logo">
     <div><h1 style="cursor:pointer" onclick="goHome()">📖 Quiz Portal</h1><p>Smart MCQ Practice</p></div>
     <div style="display:flex;gap:6px;align-items:center">
+      <button class="pwa-install-btn" id="pwaInstallBtnDesk" onclick="installPWA()" style="font-size:11px;padding:4px 8px">⬇️</button>
       <div class="bell-wrap" onclick="toggleNotifDropdown()">
         <button class="bell-btn">🔔</button>
         <div class="bell-badge" id="pubBell">0</div>
@@ -341,10 +397,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 
 <!-- MAIN -->
 <div id="main">
+  <!-- FIX 5: Mobile topbar with timer badge -->
   <div class="mobile-topbar">
     <button class="burger" onclick="openSidebar()">☰</button>
     <h2 id="mobileTitle" style="cursor:pointer" onclick="goHome()">Quiz Portal</h2>
-    <div style="display:flex;gap:5px;align-items:center">
+    <div class="mobile-topbar-right">
+      <button class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()">⬇️ Install</button>
+      <div class="mobile-timer-badge" id="mobileTimerBadge" style="display:none">⏱ <span id="mobileTimerDisp">--:--</span></div>
       <div class="bell-wrap" onclick="toggleNotifDropdown()">
         <button class="bell-btn" style="font-size:14px;padding:4px 7px">🔔</button>
         <div class="bell-badge" id="pubBellMobile">0</div>
@@ -373,11 +432,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
       <span class="quiz-subj-tag" id="quizSubjTag">—</span>
       <span class="quiz-title" id="quizTitleText">Loading...</span>
       <div class="quiz-toggles">
-        <div class="qtoggle" onclick="toggleAutoCheck()" title="Auto Check — answer select karte hi sahi/galat bataye">
+        <div class="qtoggle" onclick="toggleAutoCheck()" title="Auto Check">
           <div class="qt-sw" id="tAutoCheck"></div>
           <span class="qt-lbl">Auto Check</span>
         </div>
-        <div class="qtoggle" onclick="toggleColorMode()" title="Color Mode — sahi=green, galat=red">
+        <div class="qtoggle" onclick="toggleColorMode()" title="Color Mode">
           <div class="qt-sw" id="tColor"></div>
           <span class="qt-lbl">Color</span>
         </div>
@@ -422,11 +481,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="modal-section">
       <div class="modal-label">Questions Count</div>
-      <input class="modal-input" type="number" id="qCount" value="20" min="5" max="100">
+      <!-- FIX 2: Default 100 -->
+      <input class="modal-input" type="number" id="qCount" value="100" min="5" max="200">
     </div>
     <div class="modal-section" id="topicSection">
       <div class="modal-label">Topics (select karo ya sab)</div>
       <div class="topic-chips" id="topicChips"><div style="color:var(--muted);font-size:12px">Loading...</div></div>
+    </div>
+    <!-- SECTION FILTER -->
+    <div class="modal-section" id="sectionFilterSection">
+      <div class="modal-label">Section Filter <span style="color:var(--muted);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">(sirf selected section ke questions)</span></div>
+      <div class="sec-filter-chips">
+        <div class="sec-chip active-all" id="scAll" data-sec="all" onclick="setSecFilter('all',this)">All</div>
+        <div class="sec-chip" id="scReas" data-sec="Reasoning" onclick="setSecFilter('Reasoning',this)" style="color:var(--c-reas);border-color:rgba(0,212,255,.3)">🧠 Reasoning</div>
+        <div class="sec-chip" id="scGK" data-sec="General Awareness" onclick="setSecFilter('General Awareness',this)" style="color:var(--c-gk);border-color:rgba(251,191,36,.3)">📰 GK</div>
+        <div class="sec-chip" id="scQuant" data-sec="Quantitative Aptitude" onclick="setSecFilter('Quantitative Aptitude',this)" style="color:var(--c-quant);border-color:rgba(0,230,118,.3)">🔢 Quant</div>
+        <div class="sec-chip" id="scEng" data-sec="English" onclick="setSecFilter('English',this)" style="color:var(--c-eng);border-color:rgba(199,119,255,.3)">📝 English</div>
+      </div>
     </div>
     <div class="modal-section">
       <div class="modal-label">Already-done questions</div>
@@ -488,29 +559,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
   </div>
 </div>
 
-<!-- ONBOARDING (first visit only) -->
+<!-- ONBOARDING -->
 <div id="screen-onboard" style="display:none">
   <div class="ob-card">
     <div class="ob-logo">📖</div>
     <div class="ob-title">Quiz <span>Portal</span></div>
     <div class="ob-sub">Smart MCQ practice for SSC, UPSC aur competitive exams. AI-powered explanations ke saath.</div>
     <div class="ob-features">
-      <div class="ob-feat">
-        <span class="ob-feat-icon">🎯</span>
-        <div class="ob-feat-text"><strong>Subject-wise Tests</strong>History, Polity, Current Affairs aur bahut kuch</div>
-      </div>
-      <div class="ob-feat">
-        <span class="ob-feat-icon">🤖</span>
-        <div class="ob-feat-text"><strong>AI Explain</strong>Har question pe instant explanation aur chat</div>
-      </div>
-      <div class="ob-feat">
-        <span class="ob-feat-icon">📰</span>
-        <div class="ob-feat-text"><strong>News MCQ</strong>Latest news se bane questions — current affairs ready</div>
-      </div>
-      <div class="ob-feat">
-        <span class="ob-feat-icon">📊</span>
-        <div class="ob-feat-text"><strong>Performance Track</strong>Score, accuracy aur progress sab track hota hai</div>
-      </div>
+      <div class="ob-feat"><span class="ob-feat-icon">🎯</span><div class="ob-feat-text"><strong>Subject-wise Tests</strong>History, Polity, Current Affairs aur bahut kuch</div></div>
+      <div class="ob-feat"><span class="ob-feat-icon">🤖</span><div class="ob-feat-text"><strong>AI Explain</strong>Har question pe instant explanation aur chat</div></div>
+      <div class="ob-feat"><span class="ob-feat-icon">📰</span><div class="ob-feat-text"><strong>News MCQ</strong>Latest news se bane questions</div></div>
+      <div class="ob-feat"><span class="ob-feat-icon">📊</span><div class="ob-feat-text"><strong>Performance Track</strong>Score, accuracy aur progress sab track hota hai</div></div>
     </div>
     <button class="ob-start-btn" onclick="startFromOnboard()">🚀 Start Practice</button>
   </div>
@@ -518,24 +577,65 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex
 
 <script>
 // ═══════════════════════════════════════════
-// SOCKET.IO — Real-time notifications
+// SECTION HELPERS
 // ═══════════════════════════════════════════
+const SEC_COLORS = {
+  'Reasoning':            '#00d4ff',
+  'General Awareness':    '#fbbf24',
+  'Quantitative Aptitude':'#00e676',
+  'English':              '#c77dff'
+};
+const SEC_SHORT = {
+  'Reasoning':            'Reasoning',
+  'General Awareness':    'GK',
+  'Quantitative Aptitude':'Quant',
+  'English':              'English'
+};
+const SEC_CSS_CLASS = {
+  'Reasoning':            'qsb-reas',
+  'General Awareness':    'qsb-gk',
+  'Quantitative Aptitude':'qsb-quant',
+  'English':              'qsb-eng'
+};
+const SEC_CARD_CLASS = {
+  'Reasoning':            'sec-reas',
+  'General Awareness':    'sec-gk',
+  'Quantitative Aptitude':'sec-quant',
+  'English':              'sec-eng'
+};
+
+// FIX 1: Section order for sorting
+const SEC_ORDER = {
+  'General Awareness': 1,
+  'Quantitative Aptitude': 2,
+  'English': 3,
+  'Reasoning': 4
+};
+
+function getSectionBadgeHtml(section) {
+  if (!section) return '';
+  const cls = SEC_CSS_CLASS[section] || 'qsb-other';
+  const short = SEC_SHORT[section] || section;
+  return `<span class="q-sec-badge ${cls}">${short}</span>`;
+}
+
 // ═══════════════════════════════════════════
-// ONBOARDING — first visit only
+// ONBOARDING
 // ═══════════════════════════════════════════
 (function(){
   if(!localStorage.getItem("mqp_visited")){
     document.getElementById("screen-onboard").style.cssText="display:flex;align-items:center;justify-content:center";
   }
 })();
-
-function checkOnboarding(){ /* already handled above */ }
-
+function checkOnboarding(){}
 function startFromOnboard(){
   localStorage.setItem("mqp_visited","1");
   document.getElementById("screen-onboard").style.display="none";
 }
 
+// ═══════════════════════════════════════════
+// SOCKET
+// ═══════════════════════════════════════════
 const socket = io();
 let pubUnread = 0;
 let pubNotifs = JSON.parse(localStorage.getItem("pub_notifs") || "[]");
@@ -546,18 +646,14 @@ socket.on("new_notification", (notif) => {
   pubUnread++;
   updatePubBell();
   renderNdList();
-  // Refresh subject counts when new questions added
   if(notif.type==="new_questions") refreshSubjectCounts();
 });
 
-// Refresh subject counts (called when new questions saved)
 async function refreshSubjectCounts(){
   try{
     const res=await fetch("/api/public/subjects");
     subjects=await res.json();
-    renderSidebar();
-    renderHomeGrid();
-    updateSbStats();
+    renderSidebar(); renderHomeGrid(); updateSbStats();
   }catch(e){}
 }
 
@@ -569,30 +665,21 @@ function updatePubBell() {
     el.classList.toggle("show", pubUnread > 0);
   });
 }
-
 function toggleNotifDropdown() {
   const dd = document.getElementById("notifDropdown");
   dd.classList.toggle("show");
   if (dd.classList.contains("show")) {
-    pubUnread = 0;
-    updatePubBell();
-    renderNdList();
-    // Close on outside click
+    pubUnread = 0; updatePubBell(); renderNdList();
     setTimeout(() => document.addEventListener("click", closeNotifOnOutside, {once:true}), 10);
   }
 }
-
 function closeNotifOnOutside(e) {
   const dd = document.getElementById("notifDropdown");
   if (!dd.contains(e.target)) dd.classList.remove("show");
 }
-
 function renderNdList() {
   const list = document.getElementById("ndList");
-  if (!pubNotifs.length) {
-    list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Koi notification nahi</div>';
-    return;
-  }
+  if (!pubNotifs.length) { list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">Koi notification nahi</div>'; return; }
   list.innerHTML = pubNotifs.map((n, i) => {
     const d = new Date(n.savedAt);
     return `<div class="nd-item ${n.type==="news"?"news":""} ${i<pubUnread?"unread":""}">
@@ -601,33 +688,21 @@ function renderNdList() {
     </div>`;
   }).join("");
 }
-
 function clearPubNotifs() {
-  pubNotifs = [];
-  pubUnread = 0;
+  pubNotifs = []; pubUnread = 0;
   localStorage.removeItem("pub_notifs");
-  updatePubBell();
-  renderNdList();
+  updatePubBell(); renderNdList();
   document.getElementById("notifDropdown").classList.remove("show");
 }
-
-// Load existing notifications on page load
 async function loadPubNotifs() {
-  try {
-    const res = await fetch("/api/notifications");
-    const notifs = await res.json();
-    if (notifs.length) {
-      pubNotifs = notifs;
-      renderNdList();
-    }
-  } catch(e) {}
+  try { const res = await fetch("/api/notifications"); pubNotifs = await res.json(); renderNdList(); } catch(e) {}
 }
 
 // ═══════════════════════════════════════════
 // GLOBALS
 // ═══════════════════════════════════════════
 const ICONS={history:"🏛️",geography:"🌍",polity:"⚖️",currentaffairs:"📰",maths:"🔢",science:"🔬",economics:"📊",other:"📚",mixed:"🎲"};
-const SEC_PER_Q = 30; // 30 sec per question
+const SEC_PER_Q = 30;
 
 let subjects=[], questions=[], answers={}, currentQIdx=0;
 let timerInterval=null, timeLeft=0, quizActive=false, timerStarted=false, timerPaused=false;
@@ -636,12 +711,33 @@ let scoresHistory=JSON.parse(localStorage.getItem("mqp_scores")||"[]");
 let doneQuestions=JSON.parse(localStorage.getItem("mqp_done")||"[]");
 let shortExpCache={}, feedbackCache={};
 let excludeOn=false, selectedTopics=[];
+let selectedSection='all';
 let autoCheckOn=true, colorModeOn=true;
+let chatContexts={};
+let chatCurrentKey=null;
+let chatQuestionCtx=null;
 
-// Chat state per question (key = qIndex, value = [{role,content}])
-let chatContexts={};    // { "qIndex": [{role,content},...] }
-let chatCurrentKey=null; // current open chat key ("global" or qIndex)
-let chatQuestionCtx=null;// question object for context
+// ═══════════════════════════════════════════
+// SECTION FILTER (modal)
+// ═══════════════════════════════════════════
+function setSecFilter(sec, btn) {
+  selectedSection = sec;
+  document.querySelectorAll('.sec-chip').forEach(b => {
+    b.className = 'sec-chip';
+    const s = b.dataset.sec;
+    if (s === 'Reasoning')            { b.style.cssText='color:var(--c-reas);border-color:rgba(0,212,255,.3)'; }
+    else if (s === 'General Awareness') { b.style.cssText='color:var(--c-gk);border-color:rgba(251,191,36,.3)'; }
+    else if (s === 'Quantitative Aptitude') { b.style.cssText='color:var(--c-quant);border-color:rgba(0,230,118,.3)'; }
+    else if (s === 'English')         { b.style.cssText='color:var(--c-eng);border-color:rgba(199,119,255,.3)'; }
+    else                               { b.style.cssText=''; }
+  });
+  btn.style.cssText = '';
+  if (sec === 'all')                        { btn.className = 'sec-chip active-all'; }
+  else if (sec === 'Reasoning')             { btn.className = 'sec-chip active-reas'; }
+  else if (sec === 'General Awareness')     { btn.className = 'sec-chip active-gk'; }
+  else if (sec === 'Quantitative Aptitude') { btn.className = 'sec-chip active-quant'; }
+  else if (sec === 'English')               { btn.className = 'sec-chip active-eng'; }
+}
 
 // ═══════════════════════════════════════════
 // INIT
@@ -728,14 +824,22 @@ async function openConfig(subject){
   currentSubject=subject;
   excludeOn=false;
   selectedTopics=[];
+  selectedSection='all';
   document.getElementById("excludeToggle").classList.remove("on");
-  document.getElementById("qCount").value=20;
-  if(window.innerWidth<=768) closeSidebar(); // close sidebar on mobile
+  // FIX 2: Default 100
+  document.getElementById("qCount").value=100;
+  // Reset section chips
+  document.querySelectorAll('.sec-chip').forEach(b => { b.className='sec-chip'; b.style.cssText=''; });
+  const scAll=document.getElementById('scAll'); if(scAll) scAll.className='sec-chip active-all';
+  const scReas=document.getElementById('scReas'); if(scReas) scReas.style.cssText='color:var(--c-reas);border-color:rgba(0,212,255,.3)';
+  const scGK=document.getElementById('scGK'); if(scGK) scGK.style.cssText='color:var(--c-gk);border-color:rgba(251,191,36,.3)';
+  const scQuant=document.getElementById('scQuant'); if(scQuant) scQuant.style.cssText='color:var(--c-quant);border-color:rgba(0,230,118,.3)';
+  const scEng=document.getElementById('scEng'); if(scEng) scEng.style.cssText='color:var(--c-eng);border-color:rgba(199,119,255,.3)';
 
+  if(window.innerWidth<=768) closeSidebar();
   const subLabel=subject==="mixed"?"Mixed Test":subjects.find(s=>s.key===subject)?.label||subject;
   document.getElementById("modalTitle").textContent=`${ICONS[subject]||'📚'} ${subLabel} — Configure`;
 
-  // Load topics
   const topicSec=document.getElementById("topicSection");
   if(subject==="mixed"){
     topicSec.style.display="none";
@@ -752,7 +856,6 @@ async function openConfig(subject){
       document.getElementById("topicChips").innerHTML=`<div style="color:var(--muted);font-size:12px">No topics found</div>`;
     }
   }
-
   document.getElementById("configModal").classList.add("show");
 }
 
@@ -776,23 +879,21 @@ function toggleExclude(){
   excludeOn=!excludeOn;
   document.getElementById("excludeToggle").classList.toggle("on",excludeOn);
 }
-
 function closeModal(){
   document.getElementById("configModal").classList.remove("show");
-  // Close sidebar on mobile when modal closes without starting
   if(window.innerWidth<=768) closeSidebar();
 }
 
 async function launchQuiz(){
-  const count=parseInt(document.getElementById("qCount").value)||20;
-  currentConfig={count, topics:selectedTopics, exclude:excludeOn};
-  document.getElementById("configModal").classList.remove("show"); // close modal
-  closeSidebar(); // always close sidebar when quiz starts
+  const count=parseInt(document.getElementById("qCount").value)||100;
+  currentConfig={count, topics:selectedTopics, exclude:excludeOn, section:selectedSection};
+  document.getElementById("configModal").classList.remove("show");
+  closeSidebar();
   await startQuiz(currentSubject, null, currentConfig);
 }
 
 // ═══════════════════════════════════════════
-// QUIZ
+// QUIZ START
 // ═══════════════════════════════════════════
 async function startQuiz(subject, restore=null, config={}){
   currentSubject=subject;
@@ -801,7 +902,6 @@ async function startQuiz(subject, restore=null, config={}){
   if(restore){
     questions=restore.questions; answers=restore.answers;
     currentQIdx=restore.currentQIdx; timeLeft=restore.timeLeft;
-    // Timer was running before, auto-resume
     quizActive=true; timerStarted=true; timerPaused=false;
     showScreen("quiz");
     const subLabel=subject==="mixed"?"Mixed":subjects.find(s=>s.key===subject)?.label||subject;
@@ -811,69 +911,75 @@ async function startQuiz(subject, restore=null, config={}){
     renderAllQuestions(); initToggles(); startTimer(); saveProgress();
     return;
   }
-    showScreen("quiz");
-    document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">⚡</div>Loading...</div>`;
 
-    const body={count:config.count||20};
-    if(config.topics?.length) body.topics=config.topics;
-    if(config.exclude && doneQuestions.length) body.exclude=doneQuestions.slice(-1000);
+  showScreen("quiz");
+  document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">⚡</div>Loading...</div>`;
 
-    const res=await fetch(`/api/public/quiz/${subject}`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(body)
-    });
-    const result=await res.json();
-    questions=result.questions||[];
+  const body={count:config.count||100};
+  if(config.topics?.length) body.topics=config.topics;
+  if(config.exclude && doneQuestions.length) body.exclude=doneQuestions.slice(-1000);
+  if(config.section && config.section !== 'all') body.section=config.section;
 
-    // Handle message from server
-    if(result.message==="all_done" && questions.length){
-      // Show toast that all done, showing repeat questions
-      setTimeout(()=>{
-        const toast=document.createElement("div");
-        toast.style.cssText="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--a3);color:#000;font-weight:700;font-size:12px;padding:8px 16px;border-radius:8px;z-index:999;font-family:var(--font)";
-        toast.textContent="✅ Saare questions ho gaye! Phir se practice kar rahe hain.";
-        document.body.appendChild(toast);
-        setTimeout(()=>toast.remove(),3500);
-      },500);
-    } else if(result.message==="all_done" && !questions.length){
-      document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px">🎉</div><br>Koi questions nahi mili. Pehle MCQs save karo.</div>`;
-      return;
-    } else if(!questions.length){
-      document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px">😕</div><br>Koi questions nahi mili. Pehle MCQs save karo.</div>`;
-      return;
-    }
+  const res=await fetch(`/api/public/quiz/${subject}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  const result=await res.json();
+  let qs=result.questions||[];
 
-    answers={}; currentQIdx=0;
-    timeLeft=questions.length*SEC_PER_Q;
-    shortExpCache={};
-    feedbackCache={};
-    chatContexts={};
+  // Client-side section filter fallback
+  if(config.section && config.section !== 'all') {
+    const filtered = qs.filter(q => q.section === config.section);
+    qs = filtered.length > 0 ? filtered : qs;
+  }
+
+  // ═══════════════════════════════════════════
+  // FIX 1: Sort questions by section order
+  // GK → Quant → English → Reasoning (within each section, original order preserved)
+  // ═══════════════════════════════════════════
+  qs.sort((a, b) => {
+    const oa = SEC_ORDER[a.section] || 99;
+    const ob = SEC_ORDER[b.section] || 99;
+    return oa - ob;
+  });
+
+  questions=qs;
+
+  if(result.message==="all_done" && questions.length){
+    setTimeout(()=>{
+      const toast=document.createElement("div");
+      toast.style.cssText="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--a3);color:#000;font-weight:700;font-size:12px;padding:8px 16px;border-radius:8px;z-index:999;font-family:var(--font)";
+      toast.textContent="✅ Saare questions ho gaye! Phir se practice kar rahe hain.";
+      document.body.appendChild(toast);
+      setTimeout(()=>toast.remove(),3500);
+    },500);
+  } else if(!questions.length){
+    document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px">😕</div><br>Koi questions nahi mili. Pehle MCQs save karo.</div>`;
+    return;
+  }
+
+  answers={}; currentQIdx=0;
+  timeLeft=questions.length*SEC_PER_Q;
+  shortExpCache={}; feedbackCache={}; chatContexts={};
 
   quizActive=true; timerStarted=true; timerPaused=false;
   showScreen("quiz");
   const subLabel=subject==="mixed"?"Mixed":subjects.find(s=>s.key===subject)?.label||subject;
-  document.getElementById("quizSubjTag").textContent=ICONS[subject]||"📚";
-  document.getElementById("quizTitleText").textContent=subLabel+" Quiz";
+  const secLabel = (config.section && config.section!=='all') ? ` · ${SEC_SHORT[config.section]||config.section}` : '';
+  document.getElementById("quizSubjTag").textContent=(ICONS[subject]||"📚")+secLabel;
+  document.getElementById("quizTitleText").textContent=subLabel+" Quiz"+secLabel;
   document.getElementById("mobileTitle").textContent=subLabel;
-
   renderAllQuestions(); initToggles(); startTimer(); saveProgress();
 }
 
-function showTimerStart(){
-  const wrap=document.getElementById("timerWrap");
-  wrap.innerHTML=`<button onclick="userStartTimer()" style="background:var(--accent);border:none;color:#000;font-family:var(--font);font-size:13px;font-weight:700;padding:6px 14px;border-radius:7px;cursor:pointer">▶ Start Timer</button>`;
-}
-
-function userStartTimer(){
-  timerStarted=true;
-  startTimer();
-}
-
+// TIMER
 function startTimer(){
   clearInterval(timerInterval);
   timerPaused=false;
   updateTimerDisp();
+  // FIX 5: Show mobile timer badge
+  document.getElementById("mobileTimerBadge").style.display="flex";
   timerInterval=setInterval(()=>{
     if(!quizActive||timerPaused) return;
     timeLeft--;
@@ -882,31 +988,42 @@ function startTimer(){
     if(timeLeft<=0){clearInterval(timerInterval);submitQuiz(true);}
   },1000);
 }
-
-function pauseTimer(){
-  if(timerStarted) timerPaused=true;
-}
-
-function resumeTimer(){
-  if(timerStarted) timerPaused=false;
-}
-
+function pauseTimer(){ if(timerStarted) timerPaused=true; }
+function resumeTimer(){ if(timerStarted) timerPaused=false; }
 function updateTimerDisp(){
   const m=Math.floor(timeLeft/60), s=timeLeft%60;
-  const wrap=document.getElementById("timerWrap");
   const timeStr=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
-  // Restore timer display if it still has the start button
-  if(!wrap.querySelector("#timerDisplay")){
-    wrap.innerHTML=`⏱ <span id="timerDisplay">${timeStr}</span>`;
-  } else {
-    document.getElementById("timerDisplay").textContent=timeStr;
-  }
-  wrap.classList.toggle("danger",timeLeft<=60 && timerStarted);
+  // Desktop timer
+  document.getElementById("timerDisplay").textContent=timeStr;
+  document.getElementById("timerWrap").classList.toggle("danger",timeLeft<=60 && timerStarted);
+  // FIX 5: Mobile timer badge
+  const mb=document.getElementById("mobileTimerDisp");
+  if(mb) mb.textContent=timeStr;
+  const mBadge=document.getElementById("mobileTimerBadge");
+  if(mBadge) mBadge.classList.toggle("danger",timeLeft<=60 && timerStarted);
 }
 
 // ═══════════════════════════════════════════
-// QUESTION RENDER — scroll layout
+// RENDER QUESTIONS
 // ═══════════════════════════════════════════
+// ── Frontend: same detection as backend ──────────────────────────────────────
+function needsTavily(question, section) {
+  if (section === 'Reasoning' || section === 'Quantitative Aptitude' || section === 'English') return false;
+  const q = (question || '').toLowerCase();
+  // Year 2024+ present in question → always Tavily
+  if (/202[4-9]/.test(q)) return true;
+  // Recent keywords in Hindi/English
+  if (/हाल ही में|हालिया|ताज़ा|नवीनतम/.test(q)) return true;
+  if (/recently appointed|latest appointment/.test(q)) return true;
+  // Appointments/elections ONLY with recent year context
+  if (/appointed|elected|नियुक्त|निर्वाचित/.test(q) && /202[3-9]/.test(q)) return true;
+  // Sports events ONLY with recent year
+  if (/championship|tournament|world cup|olympics|asian games/.test(q) && /202[3-9]/.test(q)) return true;
+  // Space missions (these are recent by nature)
+  if (/nglv|gaganyaan|chandrayaan-3|aditya-l1/.test(q)) return true;
+  return false;
+}
+
 function renderAllQuestions(){
   const OPTS=["A","B","C","D","E"];
   document.getElementById("qPBar").style.width="0%";
@@ -914,23 +1031,38 @@ function renderAllQuestions(){
     const cached=shortExpCache[idx];
     const fb=feedbackCache[idx];
     const sel=answers[idx];
-    return `<div class="q-card-quiz" id="qcard${idx}">
+    const secBadge = getSectionBadgeHtml(q.section);
+    const cardSecClass = SEC_CARD_CLASS[q.section] || '';
+    return `<div class="q-card-quiz ${cardSecClass}" id="qcard${idx}">
       <div class="q-num-tag">
-        <span>Q ${idx+1}/${questions.length}${q.topic?' · '+q.topic:''}</span>
+        <div class="q-num-left">
+          <span>Q ${idx+1}/${questions.length}${q.topic?' · '+q.topic:''}</span>
+          ${secBadge}
+        </div>
         <div class="q-ai-btns">
-          <button class="ai-short-btn" onclick="toggleShortExp(${idx})">⚡ Quick Ans</button>
+          <button class="ai-short-btn" id="qabtn${idx}" onclick="toggleShortExp(${idx})">⚡ Quick Ans</button>${(()=>{ const nt=needsTavily(q.question,q.section); return `<span class="qa-src-tag ${nt?'t':'g'}" id="qasrc${idx}">${nt?'T':'G'}</span>`; })()}
           <button class="ai-chat-btn" onclick="openQuestionChat(${idx})">💬 Chat</button>
         </div>
       </div>
       <div class="q-text-quiz">${q.question}</div>
       <div class="options-list" id="opts${idx}">
-        ${q.options.map((o,i)=>`
-        <button class="option-btn${sel===o?' selected':''}" id="opt${idx}_${i}" onclick="selectAns(${idx},'${escStr(o)}',this,${i})">
-          <span class="opt-lbl">${OPTS[i]}</span>
-          <span>${o}</span>
-        </button>`).join('')}
+        ${q.options.map((o,i)=>{
+          // Restore visual state if answer already selected (for restore session)
+          let cls='';
+          if(sel && autoCheckOn && colorModeOn){
+            if(o===q.answer) cls=' opt-correct';
+            else if(o===sel && sel!==q.answer) cls=' opt-wrong';
+          } else if(sel && (!autoCheckOn || !colorModeOn)){
+            if(o===sel) cls=' opt-selected-nocolor';
+          }
+          return `<button class="option-btn${cls}" id="opt${idx}_${i}" onclick="selectAns(${idx},'${escStr(o)}',this,${i})"
+            data-opt="${escStr(o)}">
+            <span class="opt-lbl">${OPTS[i]}</span>
+            <span>${o}</span>
+          </button>`;
+        }).join('')}
       </div>
-      <div class="auto-feedback ${fb?( answers[idx]===q.answer?'correct':'wrong'):''}" id="fb${idx}" style="${fb?'display:block':'display:none'}">
+      <div class="auto-feedback ${fb?(sel===q.answer?'correct':'wrong'):''}" id="fb${idx}" style="${fb?'display:block':'display:none'}">
         ${fb||''}
       </div>
       <div class="short-exp-box" id="seb${idx}" ${cached?'style="display:block"':''}>
@@ -941,8 +1073,6 @@ function renderAllQuestions(){
   updateProgressDots();
 }
 
-function renderQuestion(){ renderAllQuestions(); } // compat
-
 function updateProgressDots(){
   const answered=Object.keys(answers).length;
   document.getElementById("qPBar").style.width=(answered/questions.length*100)+"%";
@@ -952,69 +1082,55 @@ function updateProgressDots(){
   }).join('');
 }
 
-function scrollToQ(i){
-  document.getElementById("qcard"+i)?.scrollIntoView({behavior:"smooth",block:"start"});
-}
+function scrollToQ(i){ document.getElementById("qcard"+i)?.scrollIntoView({behavior:"smooth",block:"start"}); }
+function escStr(s){ return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
 
-function escStr(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"');}
+// ═══════════════════════════════════════════
+// FIX 3 & 4: selectAns — changeable, DB-based check, no AI
+// ═══════════════════════════════════════════
+function selectAns(idx, opt, btn, optIdx){
+  const q = questions[idx];
 
-async function selectAns(idx, opt, btn, optIdx){
-  if(answers[idx]) return;
-  answers[idx]=opt;
-  const q=questions[idx];
-  const isCorrect=opt===q.answer;
+  // Clear ALL visual state first (classes + inline styles)
+  q.options.forEach((_, i) => {
+    const b = document.getElementById(`opt${idx}_${i}`);
+    if(!b) return;
+    b.classList.remove('opt-correct','opt-wrong','opt-selected-nocolor');
+    b.style.cssText = '';
+    const lbl = b.querySelector('.opt-lbl');
+    if(lbl) lbl.style.cssText = '';
+  });
+  const fbEl0 = document.getElementById("fb"+idx);
+  if(fbEl0) fbEl0.style.display='none';
 
-  // Disable all options for this Q
-  q.options.forEach((_,i)=>{ const b=document.getElementById(`opt${idx}_${i}`); if(b) b.onclick=null; });
+  // Set new answer
+  answers[idx] = opt;
 
-  if(colorModeOn){
-    // Color correct=green, wrong-chosen=red
-    q.options.forEach((o,i)=>{
-      const b=document.getElementById(`opt${idx}_${i}`);
+  // Normalize helper: lowercase + collapse whitespace for robust matching
+  const norm = s => (s||'').replace(/[\u00a0\u200b\u200c\u200d\ufeff]/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+
+  if(autoCheckOn && colorModeOn){
+    const correctNorm = norm(q.answer);
+    const chosenNorm  = norm(opt);
+    const isCorrect   = chosenNorm === correctNorm;
+    q.options.forEach((o, i) => {
+      const b = document.getElementById(`opt${idx}_${i}`);
       if(!b) return;
-      if(o===q.answer){
-        b.style.borderColor="var(--accent)"; b.style.background="rgba(79,255,176,.1)";
-        b.querySelector(".opt-lbl").style.background="var(--accent)"; b.querySelector(".opt-lbl").style.color="#000";
-      } else if(o===opt && !isCorrect){
-        b.style.borderColor="var(--a2)"; b.style.background="rgba(255,107,107,.08)";
-        b.querySelector(".opt-lbl").style.background="var(--a2)"; b.querySelector(".opt-lbl").style.color="#fff";
+      if(norm(o) === correctNorm){
+        b.classList.add('opt-correct');
+      } else if(norm(o) === chosenNorm && !isCorrect){
+        b.classList.add('opt-wrong');
       }
     });
+    const fbEl = document.getElementById("fb"+idx);
+    if(fbEl) fbEl.style.display = 'none';
   } else {
-    // Neutral blue highlight only on selected
-    btn.style.borderColor="var(--blue)"; btn.style.background="rgba(77,171,247,.08)";
-    btn.querySelector(".opt-lbl").style.background="var(--blue)"; btn.querySelector(".opt-lbl").style.color="#000";
-  }
-
-  if(autoCheckOn){
-    const fbEl=document.getElementById("fb"+idx);
-    if(fbEl){
-      fbEl.className="auto-feedback "+(isCorrect?"correct":"wrong");
-      fbEl.style.display="block";
-      const hdr=isCorrect
-        ? `<div class="fb-header c">✅ Bilkul Sahi! Bahut accha!</div>`
-        : `<div class="fb-header w">❌ Galat! Sahi jawab: <strong>${q.answer}</strong></div>`;
-      fbEl.innerHTML=hdr+`<div class="fb-explain" id="fbexp${idx}"><span style="color:var(--muted);font-size:11px">⏳ Explain aa raha hai...</span></div>`;
-      feedbackCache[idx]=hdr;
-      try{
-        const res=await fetch("/api/public/short-explain",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q.question,answer:q.answer})});
-        const d=await res.json();
-        const expEl=document.getElementById("fbexp"+idx);
-        if(expEl) expEl.innerHTML=`<span>${d.text}</span>`;
-        feedbackCache[idx]=(fbEl?.innerHTML||"");
-      }catch(e){ const expEl=document.getElementById("fbexp"+idx); if(expEl) expEl.textContent=""; }
-    }
+    btn.classList.add('opt-selected-nocolor');
   }
 
   updateProgressDots();
   saveProgress();
 }
-
-function renderDots(){ updateProgressDots(); }
-function prevQ(){}
-function nextQ(){}
-function jumpQ(i){ scrollToQ(i); }
-function skipQ(){}
 
 async function toggleShortExp(idx){
   const box=document.getElementById("seb"+idx);
@@ -1025,36 +1141,79 @@ async function toggleShortExp(idx){
   box.innerHTML=`<span style="color:var(--muted);font-size:11px">⚡ Loading...</span>`;
   try{
     const q=questions[idx];
-    const res=await fetch("/api/public/short-explain",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q.question,answer:q.answer})});
+    const res=await fetch("/api/public/short-explain",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q.question,answer:q.answer,section:q.section})});
     const d=await res.json();
+    // Show G or T badge on the button itself
+    const srcTag=document.getElementById("qasrc"+idx);
+    if(srcTag){
+      srcTag.className="qa-src-tag "+(d.usedTavily?"t":"g");
+      srcTag.textContent=d.usedTavily?"T":"G";
+    }
     shortExpCache[idx]=d.text;
     box.innerHTML=d.text;
   }catch(e){box.innerHTML="Error.";}
 }
 
-// ═══════════════════════════════════════════
 // TOGGLES
-// ═══════════════════════════════════════════
 function toggleAutoCheck(){
   autoCheckOn=!autoCheckOn;
-  document.getElementById("tAutoCheck").classList.toggle("on", autoCheckOn);
+  document.getElementById("tAutoCheck").classList.toggle("on",autoCheckOn);
+  // Redraw all answered questions with new settings
+  reapplyAnswerColors();
 }
 function toggleColorMode(){
   colorModeOn=!colorModeOn;
-  document.getElementById("tColor").classList.toggle("on", colorModeOn);
+  document.getElementById("tColor").classList.toggle("on",colorModeOn);
+  // Redraw all answered questions with new settings
+  reapplyAnswerColors();
 }
 function initToggles(){
-  document.getElementById("tAutoCheck").classList.toggle("on", autoCheckOn);
-  document.getElementById("tColor").classList.toggle("on", colorModeOn);
+  document.getElementById("tAutoCheck").classList.toggle("on",autoCheckOn);
+  document.getElementById("tColor").classList.toggle("on",colorModeOn);
 }
 
-// ═══════════════════════════════════════════
+// Reapply colors when toggle changes
+function reapplyAnswerColors(){
+  questions.forEach((q, idx) => {
+    if(!answers[idx]) return;
+    const opt = answers[idx];
+    const isCorrect = opt === q.answer;
+    // Clear all
+    q.options.forEach((_, i) => {
+      const b = document.getElementById(`opt${idx}_${i}`);
+      if(!b) return;
+      b.classList.remove('opt-correct','opt-wrong','opt-selected-nocolor');
+    });
+    const fbEl = document.getElementById("fb"+idx);
+    if(autoCheckOn && colorModeOn){
+      const correctAns2 = (q.answer||'').trim();
+      const chosenOpt2  = (opt||'').trim();
+      q.options.forEach((o, i) => {
+        const b = document.getElementById(`opt${idx}_${i}`);
+        if(!b) return;
+        const oTrim = (o||'').trim();
+        if(oTrim === correctAns2) b.classList.add('opt-correct');
+        else if(oTrim === chosenOpt2 && chosenOpt2 !== correctAns2) b.classList.add('opt-wrong');
+      });
+      if(fbEl) fbEl.style.display='none';
+    } else {
+      // No color — just show selected
+      q.options.forEach((o, i) => {
+        const b = document.getElementById(`opt${idx}_${i}`);
+        if(!b) return;
+        if(o === opt) b.classList.add('opt-selected-nocolor');
+      });
+      if(fbEl) fbEl.style.display='none';
+    }
+  });
+}
+
 // SUBMIT
-// ═══════════════════════════════════════════
 function submitQuiz(auto=false){
   if(!auto&&!confirm("Submit karna chahte hain?")) return;
   clearInterval(timerInterval); quizActive=false; clearProgress();
-
+  // FIX 5: Hide mobile timer badge
+  document.getElementById("mobileTimerBadge").style.display="none";
   let correct=0,wrong=0,skip=0;
   const newDone=[];
   questions.forEach((q,i)=>{
@@ -1063,22 +1222,16 @@ function submitQuiz(auto=false){
     else if(answers[i]===q.answer) correct++;
     else wrong++;
   });
-
-  // Save done questions
   doneQuestions=[...new Set([...doneQuestions,...newDone])];
   localStorage.setItem("mqp_done",JSON.stringify(doneQuestions.slice(-1000)));
-
   const pct=Math.round(correct/questions.length*100);
   const totalTime=questions.length*SEC_PER_Q;
-  const used=timerStarted ? totalTime-timeLeft : 0;
-  const usedStr=timerStarted ? (Math.floor(used/60)+"m "+(used%60)+"s") : "Not started";
-
+  const used=timerStarted?totalTime-timeLeft:0;
+  const usedStr=timerStarted?(Math.floor(used/60)+"m "+(used%60)+"s"):"Not started";
   scoresHistory.unshift({subject:currentSubject,pct,correct,wrong,skip,total:questions.length,time:usedStr,date:new Date().toISOString()});
   localStorage.setItem("mqp_scores",JSON.stringify(scoresHistory.slice(0,200)));
-  // Save to DB
   fetch("/api/results/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:currentSubject,correct,wrong,skip,total:questions.length,pct,timeUsed:usedStr})}).catch(()=>{});
   updateSbStats(); renderPerfSummary();
-
   const emoji=pct>=90?"🏆":pct>=70?"🎯":pct>=50?"👍":"📚";
   const lbl=pct>=90?"Outstanding! Ekdum mast!":pct>=70?"Bahut accha!":pct>=50?"Theek hai, aur practice karo":"Mehnat chahiye";
   document.getElementById("rEmoji").textContent=emoji;
@@ -1089,26 +1242,23 @@ function submitQuiz(auto=false){
   document.getElementById("rmW").textContent=wrong;
   document.getElementById("rmS").textContent=skip;
   document.getElementById("rmT").textContent=usedStr;
-
   document.getElementById("bdList").innerHTML=questions.map((q,i)=>{
     const ua=answers[i],isC=ua&&ua===q.answer,isS=!ua;
-    const cls=isS?"":"ri "+( isC?"ci":"wi");
+    const cls=isS?"":"ri "+(isC?"ci":"wi");
     const st=isS?`<span class="rb-status s">Skip</span>`:isC?`<span class="rb-status c">✓</span>`:`<span class="rb-status w">✗</span>`;
-    return `<div class="rb-item ${cls}">${st}<div class="rb-q">Q${i+1}. ${q.question}</div>
+    const secBadge = getSectionBadgeHtml(q.section);
+    return `<div class="rb-item ${cls}">${st}<div class="rb-q">${secBadge} Q${i+1}. ${q.question}</div>
     <div class="rb-row">
       ${!isS?`<span class="ya ${isC?'ok':''}">Yours: ${ua}</span>`:'<span style="color:var(--muted)">Skipped</span>'}
       ${!isC?`<span class="ra">✓ ${q.answer}</span>`:''}
     </div></div>`;
   }).join('');
-
   showScreen("result");
 }
 
 function retestSame(){startQuiz(currentSubject,null,currentConfig);}
 
-// ═══════════════════════════════════════════
 // CHAT
-// ═══════════════════════════════════════════
 function openQuestionChat(idx){
   const q=questions[idx];
   chatCurrentKey="q"+idx;
@@ -1122,10 +1272,8 @@ function openQuestionChat(idx){
   document.getElementById("chatInput").focus();
   pauseTimer();
 }
-
 function openGlobalChat(){
-  chatCurrentKey="global";
-  chatQuestionCtx=null;
+  chatCurrentKey="global"; chatQuestionCtx=null;
   document.getElementById("chatTitle").textContent="🤖 AI Teacher";
   document.getElementById("chatSubtitle").textContent="Koi bhi topic ya doubt poochho";
   if(!chatContexts["global"]) chatContexts["global"]=[];
@@ -1135,50 +1283,35 @@ function openGlobalChat(){
   document.getElementById("chatInput").focus();
   pauseTimer();
 }
-
 function closeChat(){
   document.getElementById("chatPanel").classList.remove("open");
-  // Only remove overlay if news panel also closed
-  if(!document.getElementById("newsPanel")?.classList.contains("open") &&
-     !document.getElementById("newsArticlesPanel")?.classList.contains("open"))
+  if(!document.getElementById("newsPanel")?.classList.contains("open") && !document.getElementById("newsArticlesPanel")?.classList.contains("open"))
     document.getElementById("chatOverlay").classList.remove("show");
   if(chatCurrentKey) chatContexts[chatCurrentKey]=[];
   chatCurrentKey=null; chatQuestionCtx=null;
   resumeTimer();
 }
-
 function renderChatMsgs(){
   const msgs=chatContexts[chatCurrentKey]||[];
   const el=document.getElementById("chatMsgs");
-  if(!msgs.length){
-    el.innerHTML=`<div class="chat-msg ai">Haan bolo! ${chatQuestionCtx?'Is question ke baare mein kuch poochho.':'Koi bhi SSC/UPSC topic poochho.'}</div>`;
-  } else {
-    el.innerHTML=msgs.map(m=>`<div class="chat-msg ${m.role==='user'?'user':'ai'}">${m.content}</div>`).join('');
-  }
+  if(!msgs.length){ el.innerHTML=`<div class="chat-msg ai">Haan bolo! ${chatQuestionCtx?'Is question ke baare mein kuch poochho.':'Koi bhi SSC/UPSC topic poochho.'}</div>`; }
+  else { el.innerHTML=msgs.map(m=>`<div class="chat-msg ${m.role==='user'?'user':'ai'}">${m.content}</div>`).join(''); }
   el.scrollTop=el.scrollHeight;
 }
-
 async function sendChat(){
   const inp=document.getElementById("chatInput");
   const text=inp.value.trim();
   if(!text||!chatCurrentKey) return;
   inp.value=""; inp.style.height="38px";
-
   if(!chatContexts[chatCurrentKey]) chatContexts[chatCurrentKey]=[];
   chatContexts[chatCurrentKey].push({role:"user",content:text});
   renderChatMsgs();
-
-  // Typing indicator
   const msgs=document.getElementById("chatMsgs");
   const typing=document.createElement("div");
   typing.className="chat-msg ai typing"; typing.id="typing"; typing.textContent="AI soch raha hai...";
   msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight;
-
   try{
-    const res=await fetch("/api/public/chat",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({messages:chatContexts[chatCurrentKey],questionContext:chatQuestionCtx})
-    });
+    const res=await fetch("/api/public/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:chatContexts[chatCurrentKey],questionContext:chatQuestionCtx})});
     const d=await res.json();
     document.getElementById("typing")?.remove();
     chatContexts[chatCurrentKey].push({role:"assistant",content:d.reply});
@@ -1189,7 +1322,6 @@ async function sendChat(){
     renderChatMsgs();
   }
 }
-
 function chatKeydown(e){
   if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}
   const inp=document.getElementById("chatInput");
@@ -1197,109 +1329,56 @@ function chatKeydown(e){
   inp.style.height=Math.min(inp.scrollHeight,100)+"px";
 }
 
-// ═══════════════════════════════════════════
 // NEWS QUIZ + ARTICLES
-// ═══════════════════════════════════════════
 async function startNewsQuiz(){
-  setActiveNav("news-mcq");
-  closeSidebar();
+  setActiveNav("news-mcq"); closeSidebar();
   showScreen("quiz");
   document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px;margin-bottom:12px">📰</div>News MCQs load ho rahe hain...</div>`;
-
-  const res = await fetch("/api/public/news-quiz?count=20");
-  const qs = await res.json();
-  if(!qs.length){
-    document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px">😕</div><br>Koi News MCQ nahi mili. Admin se request karo.</div>`;
-    return;
-  }
-
-  currentSubject = "news";
-  questions = qs;
-  answers = {}; currentQIdx = 0;
-  timeLeft = questions.length * SEC_PER_Q;
-  shortExpCache = {}; feedbackCache = {}; chatContexts = {};
-
-  quizActive = true;
-  document.getElementById("quizSubjTag").textContent = "📰";
-  document.getElementById("quizTitleText").textContent = "News MCQ Quiz";
-  document.getElementById("mobileTitle").textContent = "News Quiz";
-
+  const res=await fetch("/api/public/news-quiz?count=20");
+  const qs=await res.json();
+  if(!qs.length){ document.getElementById("qArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:32px">😕</div><br>Koi News MCQ nahi mili.</div>`; return; }
+  currentSubject="news"; questions=qs; answers={}; currentQIdx=0;
+  timeLeft=questions.length*SEC_PER_Q; shortExpCache={}; feedbackCache={}; chatContexts={};
+  quizActive=true;
+  document.getElementById("quizSubjTag").textContent="📰";
+  document.getElementById("quizTitleText").textContent="News MCQ Quiz";
+  document.getElementById("mobileTitle").textContent="News Quiz";
   renderAllQuestions(); initToggles(); startTimer(); saveProgress();
 }
-
 async function openNewsArticles(){
-  setActiveNav("news-read");
-  closeSidebar();
+  setActiveNav("news-read"); closeSidebar();
   document.getElementById("newsArticlesPanel").classList.add("open");
   document.getElementById("chatOverlay").classList.add("show");
-
-  const res = await fetch("/api/public/news-articles");
-  const news = await res.json();
-  const list = document.getElementById("newsArticlesList");
-
-  if(!news.length){
-    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Koi articles nahi abhi</div>';
-    return;
-  }
-
-  list.innerHTML = news.map(n => {
-    const d = new Date(n.savedAt);
-    const mcqSection = n.hasMcq && n.mcqs?.length ? `
-      <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">❓ ${n.mcqs.length} MCQs</div>
-        <div class="pac-mcqs">${n.mcqs.map((q,i)=>`
-          <div class="pac-mcq-item">
-            <div class="pac-q">Q${i+1}. ${q.question}</div>
-            <div class="pac-opts">${(q.options||[]).map(o=>`<div class="pac-opt">${o}</div>`).join("")}</div>
-            <div class="pac-ans">✓ ${q.answer}</div>
-            ${q.explanation?`<div class="pac-exp">💡 ${q.explanation}</div>`:""}
-          </div>`).join("")}
-        </div>
-      </div>` : "";
-
-    const badge = n.hasMcq ? `<span class="pac-mcq-badge">${n.mcqs?.length||0} MCQ</span>` : "";
-    return `<div class="pub-article-card">
-      <div class="pac-title">${n.title||"📢 Update"} ${badge}</div>
-      ${n.content ? `<div class="pac-body">${n.content}</div>` : ""}
-      ${mcqSection}
-      <div class="pac-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>
-    </div>`;
+  const res=await fetch("/api/public/news-articles");
+  const news=await res.json();
+  const list=document.getElementById("newsArticlesList");
+  if(!news.length){ list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Koi articles nahi abhi</div>'; return; }
+  list.innerHTML=news.map(n=>{
+    const d=new Date(n.savedAt);
+    const mcqSection=n.hasMcq&&n.mcqs?.length?`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px"><div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">❓ ${n.mcqs.length} MCQs</div><div class="pac-mcqs">${n.mcqs.map((q,i)=>`<div class="pac-mcq-item"><div class="pac-q">Q${i+1}. ${q.question}</div><div class="pac-opts">${(q.options||[]).map(o=>`<div class="pac-opt">${o}</div>`).join("")}</div><div class="pac-ans">✓ ${q.answer}</div>${q.explanation?`<div class="pac-exp">💡 ${q.explanation}</div>`:""}</div>`).join("")}</div></div>`:"";
+    const badge=n.hasMcq?`<span class="pac-mcq-badge">${n.mcqs?.length||0} MCQ</span>`:"";
+    return `<div class="pub-article-card"><div class="pac-title">${n.title||"📢 Update"} ${badge}</div>${n.content?`<div class="pac-body">${n.content}</div>`:""}${mcqSection}<div class="pac-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div></div>`;
   }).join("");
 }
-
 function closeNewsArticles(){
   document.getElementById("newsArticlesPanel").classList.remove("open");
   if(!document.getElementById("chatPanel").classList.contains("open") && !document.getElementById("newsPanel").classList.contains("open"))
     document.getElementById("chatOverlay").classList.remove("show");
   setActiveNav(null);
 }
-
-// Load news MCQ count for sidebar
 async function loadNewsMcqCount(){
-  try{
-    const res = await fetch("/api/public/news-quiz?count=1000");
-    const qs = await res.json();
-    document.getElementById("newsMcqCount").textContent = qs.length + "Q available";
-  }catch(e){ document.getElementById("newsMcqCount").textContent = "0Q"; }
+  try{ const res=await fetch("/api/public/news-quiz?count=1000"); const qs=await res.json(); document.getElementById("newsMcqCount").textContent=qs.length+"Q available"; }catch(e){ document.getElementById("newsMcqCount").textContent="0Q"; }
 }
-
-// ═══════════════════════════════════════════
-// NEWS PANEL (read)
-// ═══════════════════════════════════════════
 async function openNewsPanel(){
   document.getElementById("newsPanel").classList.add("open");
   document.getElementById("chatOverlay").classList.add("show");
   const res=await fetch("/api/news");
   const news=await res.json();
   const list=document.getElementById("newsList");
-  if(!news.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Koi news nahi abhi</div>';return;}
+  if(!news.length){ list.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Koi news nahi abhi</div>'; return; }
   list.innerHTML=news.map(n=>{
     const d=new Date(n.savedAt);
-    return `<div class="pnews-card">
-      <div class="pnews-title">${n.title||"📢 Update"}</div>
-      <div class="pnews-body">${n.content}</div>
-      <div class="pnews-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>
-    </div>`;
+    return `<div class="pnews-card"><div class="pnews-title">${n.title||"📢 Update"}</div><div class="pnews-body">${n.content}</div><div class="pnews-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div></div>`;
   }).join("");
 }
 function closeNewsPanel(){
@@ -1308,14 +1387,12 @@ function closeNewsPanel(){
     document.getElementById("chatOverlay").classList.remove("show");
 }
 
-// ═══════════════════════════════════════════
-// PROGRESS RESTORE
-// ═══════════════════════════════════════════
+// PROGRESS
 function saveProgress(){
   if(!quizActive||!questions.length) return;
   localStorage.setItem("mqp_prog",JSON.stringify({subject:currentSubject,questions,answers,currentQIdx,timeLeft,config:currentConfig,savedAt:Date.now()}));
 }
-function clearProgress(){localStorage.removeItem("mqp_prog");}
+function clearProgress(){ localStorage.removeItem("mqp_prog"); }
 function checkRestored(){
   const raw=localStorage.getItem("mqp_prog");
   if(!raw) return;
@@ -1329,28 +1406,64 @@ function checkRestored(){
   }catch(e){clearProgress();}
 }
 
-// ═══════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════════
 function showScreen(n){
-  const home=document.getElementById("screen-home");
+  document.getElementById("screen-home").style.display=n==="home"?"block":"none";
   const quiz=document.getElementById("screen-quiz");
-  const result=document.getElementById("screen-result");
-  home.style.display=n==="home"?"block":"none";
   quiz.style.display=n==="quiz"?"flex":"none";
   if(n==="quiz") quiz.style.flexDirection="column";
-  result.style.display=n==="result"?"block":"none";
+  document.getElementById("screen-result").style.display=n==="result"?"block":"none";
+  // Hide mobile timer when not in quiz
+  if(n!=="quiz") document.getElementById("mobileTimerBadge").style.display="none";
   document.getElementById("main").scrollTop=0;
 }
-function goHome(){clearInterval(timerInterval);quizActive=false;clearProgress();setActiveNav(null);document.getElementById("mobileTitle").textContent="Quiz Portal";showScreen("home");renderPerfSummary();}
-function setActiveNav(s){document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));if(s)document.getElementById("nav-"+s)?.classList.add("active");}
-function openSidebar(){document.getElementById("sidebar").classList.add("open");document.getElementById("sideOverlay").classList.add("show");}
-function closeSidebar(){document.getElementById("sidebar").classList.remove("open");document.getElementById("sideOverlay").classList.remove("show");}
+function goHome(){ clearInterval(timerInterval); quizActive=false; clearProgress(); setActiveNav(null); document.getElementById("mobileTitle").textContent="Quiz Portal"; showScreen("home"); renderPerfSummary(); }
+function setActiveNav(s){ document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active")); if(s) document.getElementById("nav-"+s)?.classList.add("active"); }
+function openSidebar(){ document.getElementById("sidebar").classList.add("open"); document.getElementById("sideOverlay").classList.add("show"); }
+function closeSidebar(){ document.getElementById("sidebar").classList.remove("open"); document.getElementById("sideOverlay").classList.remove("show"); }
 
 init();
 loadPubNotifs();
 loadNewsMcqCount();
 checkOnboarding();
+
+// ═══════════════════════════════════════════
+// PWA — Service Worker + Install
+// ═══════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js')
+    .then(r => console.log('✅ SW registered:', r.scope))
+    .catch(e => console.log('SW error:', e));
+}
+
+let deferredPrompt = null;
+
+function updateInstallBtns(show) {
+  ['pwaInstallBtn','pwaInstallBtnDesk'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = show ? 'flex' : 'none';
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  updateInstallBtns(true);
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  updateInstallBtns(false);
+});
+
+function installPWA() {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(choice => {
+    deferredPrompt = null;
+    if(choice.outcome === 'accepted') updateInstallBtns(false);
+  });
+}
 </script>
 </body>
 </html>

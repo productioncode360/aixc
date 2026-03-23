@@ -11,9 +11,14 @@
   --bg:#050b18;--s1:#0c1628;--s2:#111d35;--s3:#1a2844;
   --border:#1e3050;--accent:#00d4ff;--purple:#7c3aed;
   --green:#00e676;--red:#ff4444;--gold:#fbbf24;--orange:#f97316;
+  --teal:#00c9a7;--pink:#f472b6;
   --text:#e2e8f0;--muted:#64748b;
   --font:'Space Grotesk','Noto Sans Devanagari',sans-serif;
   --mono:'JetBrains Mono',monospace;
+  --c-reasoning:#00d4ff;
+  --c-gk:#fbbf24;
+  --c-quant:#00e676;
+  --c-english:#c77dff;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -26,9 +31,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .sb-head h1{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent)}
 .sb-head p{font-size:10px;color:var(--muted);margin-top:1px}
 .sb-close{display:none;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
-.subject-tabs{display:flex;flex-wrap:wrap;gap:3px;padding:7px 8px;border-bottom:1px solid var(--border);background:var(--s2)}
+.subject-tabs{display:flex;flex-wrap:wrap;gap:3px;padding:7px 8px;border-bottom:1px solid var(--border);background:var(--s2);align-items:center}
 .stab{font-size:9px;font-weight:600;padding:3px 7px;border-radius:18px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase}
 .stab.active,.stab:hover{background:var(--accent);color:#000;border-color:var(--accent)}
+.stab-add{font-size:12px;font-weight:700;padding:2px 7px;border-radius:18px;border:1px dashed var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;line-height:1}
+.stab-add:hover{border-color:var(--green);color:var(--green)}
 .history-scroll{flex:1;overflow-y:auto;padding:7px}
 .history-scroll::-webkit-scrollbar{width:3px}
 .history-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -38,6 +45,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .h-topic{font-size:13px;font-weight:600}
 .h-meta{font-size:10px;color:var(--muted);margin-top:3px;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
 .h-badge{font-size:9px;padding:1px 6px;border-radius:10px;background:var(--purple);color:#fff;font-weight:600}
+.h-sec-chips{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
+.h-sec-chip{font-size:8px;font-weight:700;padding:1px 5px;border-radius:8px}
 .h-actions{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;gap:4px;opacity:0;transition:opacity .15s}
 .h-item:hover .h-actions{opacity:1}
 .h-del,.h-topic-del{background:none;border:none;cursor:pointer;font-size:13px;padding:3px 5px;border-radius:5px;transition:all .15s}
@@ -46,10 +55,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .h-topic-del{color:var(--muted);font-size:11px}
 .h-topic-del:hover{color:var(--orange);background:rgba(249,115,22,.1)}
 .stats-bar{display:flex;gap:10px;padding:8px 11px;border-top:1px solid var(--border);background:var(--s2)}
-.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px}
-.nav-item:hover{background:var(--s3);border-color:var(--border)}
-.nav-name{font-size:13px;font-weight:600;color:var(--text)}
-.nav-count{font-size:10px;color:var(--muted);font-family:var(--mono)}
 .stat-chip{font-size:10px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:3px}
 .stat-chip span{color:var(--accent);font-family:var(--mono)}
 
@@ -63,32 +68,40 @@ body{font-family:var(--font);background:var(--bg);color:var(--text)}
 .tai-chat{background:rgba(124,58,237,.12);color:var(--purple);border-color:rgba(124,58,237,.3)}
 .tai-teacher{background:rgba(249,115,22,.12);color:var(--orange);border-color:rgba(249,115,22,.3)}
 .tai-news{background:rgba(0,212,255,.1);color:var(--accent);border-color:rgba(0,212,255,.2)}
+.tai-smart{background:rgba(0,201,167,.1);color:var(--teal);border-color:rgba(0,201,167,.3)}
+.tai-dupcheck{background:rgba(244,114,182,.1);color:var(--pink);border-color:rgba(244,114,182,.3)}
+.tai-ainews{background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.3)}
 .tai-btn:hover{filter:brightness(1.3)}
 
-/* Bell */
 .bell-wrap{position:relative;cursor:pointer}
-.bell-btn{background:none;border:none;font-size:18px;cursor:pointer;padding:4px;color:var(--text);position:relative}
-.bell-badge{
-  position:absolute;top:-2px;right:-2px;
-  background:var(--red);color:#fff;
-  font-size:9px;font-weight:700;
-  min-width:16px;height:16px;
-  border-radius:8px;display:none;
-  align-items:center;justify-content:center;
-  padding:0 4px;font-family:var(--mono);
-}
+.bell-btn{background:none;border:none;font-size:18px;cursor:pointer;padding:4px;color:var(--text)}
+.bell-badge{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 4px;font-family:var(--mono)}
 .bell-badge.show{display:flex}
 
-/* Desktop action bar */
-.desk-actions{display:flex;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid var(--border);background:var(--s1)}
+.desk-actions{display:flex;align-items:center;gap:6px;padding:9px 16px;border-bottom:1px solid var(--border);background:var(--s1);flex-wrap:wrap}
 .da-title{font-size:12px;font-weight:700;color:var(--accent);flex:1;letter-spacing:1px;text-transform:uppercase}
-.da-btn{font-size:11px;font-weight:700;padding:6px 11px;border-radius:7px;border:1px solid;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px}
+.da-btn{font-size:11px;font-weight:700;padding:6px 11px;border-radius:7px;border:1px solid;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .da-chat{background:rgba(124,58,237,.12);color:var(--purple);border-color:rgba(124,58,237,.3)}
 .da-teacher{background:rgba(249,115,22,.12);color:var(--orange);border-color:rgba(249,115,22,.3)}
 .da-news{background:rgba(0,212,255,.1);color:var(--accent);border-color:rgba(0,212,255,.2)}
+.da-smart{background:rgba(0,201,167,.1);color:var(--teal);border-color:rgba(0,201,167,.3)}
+.da-dupcheck{background:rgba(244,114,182,.1);color:var(--pink);border-color:rgba(244,114,182,.3)}
+.da-ainews{background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.3)}
 .da-btn:hover{filter:brightness(1.3);transform:translateY(-1px)}
 
-/* Panel tabs */
+/* ══ SECTION FILTER BAR ══ */
+.sec-filter-bar{display:flex;gap:5px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--s2);align-items:center;flex-shrink:0;flex-wrap:wrap}
+.sec-filter-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px}
+.sec-btn{font-size:10px;font-weight:700;padding:4px 10px;border-radius:18px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:4px}
+.sec-btn:hover{filter:brightness(1.2)}
+.sec-btn.active-all{background:var(--accent);color:#000;border-color:var(--accent)}
+.sec-btn.active-reas{background:var(--c-reasoning);color:#000;border-color:var(--c-reasoning)}
+.sec-btn.active-gk{background:var(--c-gk);color:#000;border-color:var(--c-gk)}
+.sec-btn.active-quant{background:var(--c-quant);color:#000;border-color:var(--c-quant)}
+.sec-btn.active-eng{background:var(--c-english);color:#000;border-color:var(--c-english)}
+.sec-btn .sec-count{font-size:9px;background:rgba(0,0,0,0.2);padding:1px 5px;border-radius:8px;font-family:var(--mono)}
+.sec-filter-info{font-size:10px;color:var(--muted);margin-left:auto;font-family:var(--mono)}
+
 .panel-tabs{display:none;border-bottom:1px solid var(--border);background:var(--s1)}
 .ptab{flex:1;padding:9px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
 .ptab.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -110,15 +123,16 @@ select option{background:var(--s2)}
 
 .btn{padding:10px 14px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
-.btn:active{transform:translateY(0)}
 .btn-full{width:100%;display:block;margin-bottom:8px}
 .btn-green{background:var(--green);color:#000}
 .btn-blue{background:var(--accent);color:#000}
 .btn-purple{background:var(--purple);color:#fff}
 
+/* ══ QUESTION CARDS ══ */
 .q-card{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:9px;padding:12px;margin-bottom:9px;animation:fadeUp .3s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.q-num{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:600;margin-bottom:4px;letter-spacing:1px}
+.q-num{font-family:var(--mono);font-size:10px;color:var(--accent);font-weight:600;margin-bottom:4px;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+.q-sec-badge{font-size:9px;font-weight:700;padding:1px 7px;border-radius:8px}
 .q-text{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:8px}
 .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
 .opt-box{background:var(--s1);padding:6px 9px;border-radius:5px;border:1px solid var(--border);font-size:11px;line-height:1.4}
@@ -148,7 +162,6 @@ select option{background:var(--s2)}
 .chat-send{background:var(--purple);border:none;color:#fff;border-radius:8px;padding:8px 13px;font-size:15px;cursor:pointer;transition:all .15s}
 .chat-send:hover{filter:brightness(1.2)}
 
-/* Teacher */
 .teacher-config{padding:12px 15px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:7px;background:var(--s2);flex-shrink:0}
 .tc-row{display:flex;gap:7px}
 .tc-row select,.tc-row input{margin-bottom:0;flex:1}
@@ -173,36 +186,71 @@ select option{background:var(--s2)}
 .tq-ans{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px;margin-bottom:6px}
 .tq-explain{font-size:11px;color:var(--muted);line-height:1.6;padding:7px 9px;background:rgba(255,255,255,.02);border-radius:6px;border:1px solid var(--border)}
 
-/* Notification Panel */
+#smartPanel{width:520px;right:-540px}
+#smartPanel.open{right:0}
+.sg-config{padding:12px 15px;border-bottom:1px solid var(--border);background:var(--s2);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.sg-gen-btn{background:linear-gradient(135deg,var(--teal),#0077ff);border:none;color:#fff;border-radius:8px;padding:10px 14px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;width:100%}
+.sg-gen-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.sg-gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.sg-meta-bar{display:flex;gap:8px;align-items:center;padding:8px 15px;border-bottom:1px solid var(--border);background:var(--s3);flex-shrink:0;flex-wrap:wrap}
+.sg-meta-chip{font-size:11px;font-weight:700;font-family:var(--mono);padding:3px 9px;border-radius:18px;border:1px solid;display:flex;align-items:center;gap:4px}
+.sg-chip-token{color:var(--gold);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.07)}
+.sg-chip-time{color:var(--green);border-color:rgba(0,230,118,.3);background:rgba(0,230,118,.07)}
+.sg-chip-saved{color:var(--teal);border-color:rgba(0,201,167,.3);background:rgba(0,201,167,.07)}
+.timer-ring-wrap{display:flex;align-items:center;gap:6px;margin-left:auto}
+.timer-ring{width:32px;height:32px;transform:rotate(-90deg)}
+.timer-ring-bg{fill:none;stroke:var(--border);stroke-width:3}
+.timer-ring-fg{fill:none;stroke:var(--orange);stroke-width:3;stroke-linecap:round;stroke-dasharray:88;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke .5s}
+.timer-label{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--orange);min-width:28px}
+.sg-output{flex:1;overflow-y:auto;padding:12px}
+.sg-output::-webkit-scrollbar{width:3px}
+.sg-output::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.sg-q-card{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:9px;padding:11px 13px;margin-bottom:9px;animation:fadeUp .25s ease both}
+.sg-q-num{font-family:var(--mono);font-size:10px;color:var(--teal);font-weight:700;margin-bottom:4px}
+.sg-q-text{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:8px}
+.sg-opts{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+.sg-opt{background:var(--s1);padding:6px 9px;border-radius:5px;border:1px solid var(--border);font-size:11px;line-height:1.4}
+.sg-ans{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px;margin-bottom:5px}
+.sg-exp{font-size:11px;color:var(--muted);line-height:1.5;padding:6px 9px;background:rgba(255,255,255,.02);border-radius:6px;border:1px solid var(--border)}
+.sg-stat-box{background:var(--s3);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:14px}
+.sg-stat{text-align:center}
+.sg-stat-val{font-size:20px;font-weight:800;font-family:var(--mono);color:var(--teal)}
+.sg-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+
+#dupPanel{width:480px;right:-500px}
+#dupPanel.open{right:0}
+.dup-config{padding:12px 15px;border-bottom:1px solid var(--border);background:var(--s2);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.dup-scan-btn{background:linear-gradient(135deg,var(--pink),var(--purple));border:none;color:#fff;border-radius:8px;padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;width:100%}
+.dup-scan-btn:hover{filter:brightness(1.1)}
+.dup-scan-btn:disabled{opacity:.5;cursor:not-allowed}
+.dup-delete-all-btn{background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.3);color:var(--red);border-radius:8px;padding:8px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;width:100%;display:none}
+.dup-delete-all-btn:hover{background:rgba(255,68,68,.22)}
+.dup-output{flex:1;overflow-y:auto;padding:12px}
+.dup-output::-webkit-scrollbar{width:3px}
+.dup-output::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.dup-item{background:var(--s2);border:1px solid rgba(244,114,182,.3);border-left:3px solid var(--pink);border-radius:9px;padding:11px 13px;margin-bottom:9px}
+.dup-q{font-size:13px;font-weight:600;line-height:1.5;margin-bottom:7px}
+.dup-occ{display:flex;flex-direction:column;gap:4px}
+.dup-occ-item{font-size:11px;color:var(--muted);background:var(--s3);padding:4px 9px;border-radius:5px;border:1px solid var(--border)}
+.dup-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--pink);background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.2);padding:2px 8px;border-radius:18px;margin-bottom:7px}
+.dup-summary{background:var(--s3);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap}
+
 #notifPanel{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s;z-index:450}
 #notifPanel.open{right:0}
 .notif-head{padding:13px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--s2);flex-shrink:0}
-.notif-head h3{font-size:14px;font-weight:700;color:var(--text)}
+.notif-head h3{font-size:14px;font-weight:700}
 .notif-actions{display:flex;gap:7px;align-items:center}
 .notif-clear{font-size:11px;font-weight:700;padding:4px 9px;border-radius:6px;background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.2);cursor:pointer}
 .notif-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
 .notif-list{flex:1;overflow-y:auto;padding:10px}
-.notif-list::-webkit-scrollbar{width:3px}
-.notif-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 .notif-item{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:7px;border-left:3px solid var(--accent)}
-.notif-item.news-type{border-left-color:var(--gold)}
 .notif-item.unread{background:#0a1e3d}
 .ni-msg{font-size:13px;font-weight:600;line-height:1.4}
 .ni-meta{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
-.ni-detail{font-size:11px;color:var(--muted);margin-top:4px}
 
-/* News Panel */
 #newsPanel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--s1);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:right .3s;z-index:400}
 #newsPanel.open{right:0}
-#newsViewAdd{display:none;flex:1;min-height:0;overflow:hidden;flex-direction:column}
-#newsViewAdd.active{display:flex}
-#newsViewDetail{display:none;flex:1;overflow-y:auto;padding:14px 15px;min-height:0}
-#newsViewDetail.active{display:block}
-#newsViewList{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
 .news-form{padding:14px 15px;background:var(--s2);flex:1;overflow-y:auto;min-height:0}
-.news-form::-webkit-scrollbar{width:3px}
-.news-form::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-/* News list items */
 .news-li{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .15s;position:relative}
 .news-li:hover{border-color:var(--accent);transform:translateX(2px)}
 .news-li-title{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:3px;padding-right:28px}
@@ -211,7 +259,6 @@ select option{background:var(--s2)}
 .news-li-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s}
 .news-li:hover .news-li-del{opacity:1}
 .news-li-del:hover{color:var(--red)}
-/* Detail view */
 .nd-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:10px;line-height:1.3}
 .nd-para{font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:14px}
 .nd-mcq-item{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:9px;padding:12px;margin-bottom:9px}
@@ -219,48 +266,24 @@ select option{background:var(--s2)}
 .nd-opts{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
 .nd-opt{background:var(--s1);padding:6px 9px;border-radius:5px;border:1px solid var(--border);font-size:11px}
 .nd-ans{display:inline-flex;gap:4px;font-size:11px;font-weight:700;color:var(--green);background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px;margin-bottom:5px}
-.nd-exp{font-size:11px;color:var(--muted);line-height:1.5}
+.news-ai-btn{background:linear-gradient(135deg,var(--purple),var(--orange));border:none;color:#fff;border-radius:8px;padding:10px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .15s;margin-top:4px}
+.news-post-btn{background:var(--gold);border:none;color:#000;border-radius:8px;padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .15s}
+.news-preview-box{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.7;white-space:pre-wrap}
 .mcq-count-chip{padding:5px 11px;border-radius:18px;border:1px solid var(--border);background:var(--s2);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--mono)}
 .mcq-count-chip:hover,.mcq-count-chip.active{background:var(--accent);color:#000;border-color:var(--accent)}
-.news-ai-btn{background:linear-gradient(135deg,var(--purple),var(--orange));border:none;color:#fff;border-radius:8px;padding:10px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .15s;margin-top:4px}
-.news-ai-btn:hover{filter:brightness(1.1)}
-.news-form{padding:14px 15px;background:var(--s2);flex:1;overflow-y:auto;min-height:0}
-.news-form::-webkit-scrollbar{width:3px}
-.news-form::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.news-post-btn{background:var(--gold);border:none;color:#000;border-radius:8px;padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .15s}
-.news-post-btn:hover{filter:brightness(1.1)}
-.news-preview-box{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--text)}
-.news-mcq-item{background:var(--s3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:11px 13px;margin-bottom:8px}
-.nmi-q{font-size:13px;font-weight:600;margin-bottom:8px;line-height:1.4}
-.nmi-opts{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
-.nmi-opt{background:var(--s2);padding:5px 8px;border-radius:5px;border:1px solid var(--border);font-size:11px}
-.nmi-ans{font-size:11px;font-weight:700;color:var(--green);display:inline-flex;align-items:center;gap:4px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);padding:3px 9px;border-radius:18px}
-.nmi-exp{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
-.news-card{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:10px;position:relative;border-left:3px solid var(--gold)}
-.nc-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;gap:7px}
-.nc-mcq-badge{font-size:9px;padding:2px 7px;border-radius:10px;background:rgba(0,212,255,.12);color:var(--accent);border:1px solid rgba(0,212,255,.2);font-weight:700}
-.nc-body{font-size:12px;line-height:1.6;white-space:pre-wrap;color:var(--text)}
-.nc-meta{font-size:10px;color:var(--muted);margin-top:7px;font-family:var(--mono)}
-.nc-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s}
-.news-card:hover .nc-del{opacity:1}
-.nc-del:hover{color:var(--red)}
-.news-list::-webkit-scrollbar{width:3px}
-.news-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.news-card{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:10px;position:relative;border-left:3px solid var(--gold)}
-.nc-title{font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px}
-.nc-body{font-size:13px;line-height:1.6;white-space:pre-wrap}
-.nc-meta{font-size:10px;color:var(--muted);margin-top:7px;font-family:var(--mono)}
-.nc-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0;transition:opacity .15s}
-.news-card:hover .nc-del{opacity:1}
-.nc-del:hover{color:var(--red)}
-.news-list{max-height:220px;overflow-y:auto;padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg)}
-.news-list::-webkit-scrollbar{width:3px}
-.news-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-#newsStep2{flex:1;overflow-y:auto;padding:14px 15px;min-height:0}
-#newsStep2::-webkit-scrollbar{width:3px}
-#newsStep2::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-.news-list-toggle{padding:8px 15px;background:var(--s3);border-top:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;user-select:none}
-.news-list-toggle:hover{color:var(--accent)}
+
+#addSubjectModal{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
+#addSubjectModal.show{display:flex}
+.modal-box{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:320px;max-width:92vw}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:14px}
+.modal-input{width:100%;background:var(--s2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:var(--font);font-size:14px;outline:none;margin-bottom:12px}
+.modal-input:focus{border-color:var(--green)}
+.modal-btns{display:flex;gap:8px}
+.modal-cancel{flex:1;padding:9px;border-radius:8px;background:var(--s3);border:1px solid var(--border);color:var(--muted);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer}
+.modal-ok{flex:1;padding:9px;border-radius:8px;background:var(--green);border:none;color:#000;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer}
+
+#addTopicModal{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
+#addTopicModal.show{display:flex}
 
 #sbOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99}
 #aiOverlay{display:none;position:fixed;inset:0;z-index:399}
@@ -270,16 +293,54 @@ select option{background:var(--s2)}
 @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
 .empty{text-align:center;padding:30px 14px;color:var(--muted);font-size:13px}
 .empty-icon{font-size:26px;margin-bottom:7px}
-#toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;font-weight:700;font-size:13px;padding:9px 15px;border-radius:8px;transform:translateY(60px);opacity:0;transition:all .3s;z-index:999}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;font-weight:700;font-size:13px;padding:9px 15px;border-radius:8px;transform:translateY(60px);opacity:0;transition:all .3s;z-index:999;max-width:320px}
 #toast.show{transform:translateY(0);opacity:1}
+#toast.err{background:var(--red);color:#fff}
+
+#ainewsPanel{width:560px;right:-580px}
+#ainewsPanel.open{right:0}
+.an-section{border-top:1px solid var(--border);padding:12px 15px;background:var(--s2);flex-shrink:0}
+.an-date-chip{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--gold);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);padding:4px 11px;border-radius:18px}
+.an-time-chip{font-size:12px;font-weight:700;font-family:var(--mono);color:var(--teal);background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.25);padding:4px 11px;border-radius:18px;cursor:pointer}
+.an-gen-btn{background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;color:#fff;border-radius:8px;padding:10px 14px;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:all .15s;margin-top:6px}
+.an-gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.an-meta-bar{display:flex;gap:7px;align-items:center;padding:7px 15px;background:var(--s3);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.an-output{flex:1;overflow-y:auto;padding:12px 15px}
+.an-topic-card{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:9px;padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:all .15s;animation:fadeUp .25s ease both}
+.an-topic-card:hover{border-color:var(--gold);transform:translateX(2px)}
+.an-topic-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:5px}
+.an-topic-summary{font-size:11px;color:var(--muted);line-height:1.6}
+.an-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0}
+.an-tab{flex:1;padding:9px;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.an-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.an-view{display:none;flex:1;flex-direction:column;min-height:0;overflow:hidden}
+.an-view.active{display:flex}
+.an-daily-label{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;margin-left:auto}
+.an-daily-cb{width:14px;height:14px;accent-color:var(--teal);cursor:pointer}
+.an-sched-item{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:8px 11px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.an-sched-time{font-size:11px;font-weight:700;font-family:var(--mono);color:var(--orange);min-width:55px}
+.an-sched-prompt{flex:1;font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.an-sched-badge{font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700}
+.an-sched-daily{background:rgba(0,201,167,.12);color:var(--teal);border:1px solid rgba(0,201,167,.2)}
+.an-sched-pending{background:rgba(249,115,22,.12);color:var(--orange);border:1px solid rgba(249,115,22,.2)}
+.an-sched-done{background:rgba(0,230,118,.12);color:var(--green);border:1px solid rgba(0,230,118,.2)}
+.an-sched-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px}
+.an-sched-del:hover{color:var(--red)}
+.an-add-sched-btn{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);color:var(--orange);border-radius:7px;padding:6px 12px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;margin-top:7px;width:100%}
+.an-gen-area{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-top:10px;display:none}
+.an-gen-area.active{display:block}
+.an-para-box{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-size:12px;line-height:1.7;white-space:pre-wrap;margin-bottom:10px;max-height:200px;overflow-y:auto}
+.an-mcq-card{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:8px;padding:11px 13px;margin-bottom:8px}
+.an-save-btn{padding:8px 13px;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;border:none;white-space:nowrap}
+.an-save-para-btn{background:var(--purple);color:#fff}
+.an-save-mcq-btn{background:var(--teal);color:#000}
 
 @media(max-width:900px){
   .panels{grid-template-columns:1fr}
   .panel{border-right:none;border-bottom:1px solid var(--border)}
-  .panel:last-child{border-bottom:none}
   .panel.hidden{display:none}
   .panel-tabs{display:flex}
-  .ai-panel,#newsPanel{width:100%;right:-100%}
+  .ai-panel,#newsPanel,#smartPanel,#dupPanel,#ainewsPanel{width:100%;right:-100%}
   #notifPanel{width:100%;right:-100%}
 }
 @media(max-width:700px){
@@ -295,12 +356,8 @@ select option{background:var(--s2)}
   .panel{height:auto;overflow:visible}
   .panel.hidden{display:none}
   .panel-tabs{display:flex}
-  .input-row{flex-direction:column;gap:7px}
-  .input-row input,.input-row select{margin-bottom:0}
   .opt-grid{grid-template-columns:1fr}
-  .ai-panel,#newsPanel,#notifPanel{width:100%;right:-100%}
   #aiOverlay.show,#notifOverlay.show{display:block}
-  .tc-row{flex-direction:column}
 }
 </style>
 </head>
@@ -309,54 +366,76 @@ select option{background:var(--s2)}
 <div id="aiOverlay" onclick="closeAllAI()"></div>
 <div id="notifOverlay" onclick="closeNotif()"></div>
 
+<div id="addSubjectModal">
+  <div class="modal-box">
+    <div class="modal-title">➕ Naya Subject Add Karo</div>
+    <input type="text" class="modal-input" id="newSubjectInput" placeholder="Subject name" maxlength="50" onkeydown="if(event.key==='Enter')confirmAddSubject()">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Key auto-generate hogi label se</div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeSubjectModal()">Cancel</button>
+      <button class="modal-ok" onclick="confirmAddSubject()">✅ Add Subject</button>
+    </div>
+  </div>
+</div>
+
+<div id="addTopicModal" class="" style="position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)">
+  <div class="modal-box">
+    <div class="modal-title">📁 Naya Topic Add Karo</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px" id="addTopicSubjectLabel"></div>
+    <input type="text" class="modal-input" id="newTopicInput" placeholder="Topic name..." maxlength="80" onkeydown="if(event.key==='Enter')confirmAddTopic()">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeAddTopicModal()">Cancel</button>
+      <button class="modal-ok" style="background:var(--teal);color:#000" onclick="confirmAddTopic()">✅ Add Topic</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
-  <!-- SIDEBAR -->
   <aside id="sidebar">
     <div class="sb-head">
       <div><h1>MCQ Matrix</h1><p>Smart Question Bank</p></div>
       <button class="sb-close" onclick="closeSb()">✕</button>
     </div>
-    <div class="subject-tabs">
+    <div class="subject-tabs" id="subjectTabs">
       <button class="stab active" onclick="filterHistory('all',this)">All</button>
-      <button class="stab" onclick="filterHistory('history',this)">Hist</button>
-      <button class="stab" onclick="filterHistory('geography',this)">Geo</button>
-      <button class="stab" onclick="filterHistory('polity',this)">Pol</button>
-      <button class="stab" onclick="filterHistory('currentaffairs',this)">CA</button>
-      <button class="stab" onclick="filterHistory('maths',this)">Math</button>
-      <button class="stab" onclick="filterHistory('science',this)">Sci</button>
-      <button class="stab" onclick="filterHistory('economics',this)">Eco</button>
-      <button class="stab" onclick="filterHistory('other',this)">Gen</button>
+      <button class="stab-add" onclick="openSubjectModal()" title="Add new subject">＋</button>
+    </div>
+    <div id="addTopicBar" style="display:none;padding:5px 8px;border-bottom:1px solid var(--border);background:var(--s3)">
+      <button onclick="openAddTopicModal()" style="width:100%;background:rgba(0,230,118,.08);border:1px dashed rgba(0,230,118,.3);color:var(--green);border-radius:7px;padding:6px 10px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center">
+        <span style="font-size:14px">+</span> <span id="addTopicBarLabel">Topic Add Karo</span>
+      </button>
     </div>
     <div class="history-scroll" id="historyList">
       <div class="empty"><div class="empty-icon">📚</div>No records yet</div>
     </div>
-    <!-- News quick links -->
     <div style="padding:6px 8px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--s2)">
       <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:4px 4px 6px;font-weight:600">News</div>
-      <div class="nav-item" style="margin-bottom:3px" onclick="openNews()">
-        <span class="nav-icon" style="font-size:15px">📰</span>
-        <div class="nav-info">
-          <div class="nav-name" style="font-size:12px">News Manager</div>
-          <div class="nav-count" id="adminNewsCount">Loading...</div>
+      <div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:2px" onclick="openNews()">
+        <span style="font-size:15px">📰</span>
+        <div>
+          <div style="font-size:13px;font-weight:600">News Manager</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono)" id="adminNewsCount">Loading...</div>
         </div>
       </div>
     </div>
     <div class="stats-bar">
       <div class="stat-chip">Total: <span id="statTotal">0</span></div>
       <div class="stat-chip">Questions: <span id="statQ">0</span></div>
+      <div class="stat-chip" id="secFilterStat" style="margin-left:auto;display:none">Showing: <span id="secFilterCount" style="color:var(--gold)">0</span></div>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div id="main">
-    <!-- Mobile topbar -->
     <div class="topbar">
       <button class="burger" onclick="openSb()">☰</button>
       <h2>MCQ Matrix</h2>
       <div class="topbar-btns">
+        <button class="tai-btn tai-smart" onclick="openSmart()">🤖</button>
+        <button class="tai-btn tai-dupcheck" onclick="openDupCheck()">🔍</button>
         <button class="tai-btn tai-chat" onclick="openChat()">💬</button>
-        <button class="tai-btn tai-teacher" onclick="openTeacher()">🤖</button>
+        <button class="tai-btn tai-teacher" onclick="openTeacher()">🎓</button>
         <button class="tai-btn tai-news" onclick="openNews()">📰</button>
+        <button class="tai-btn tai-ainews" onclick="openAiNews()">📡</button>
         <div class="bell-wrap" onclick="openNotif()">
           <button class="bell-btn">🔔</button>
           <div class="bell-badge" id="bellBadge">0</div>
@@ -364,16 +443,39 @@ select option{background:var(--s2)}
       </div>
     </div>
 
-    <!-- Desktop action bar -->
     <div class="desk-actions">
       <span class="da-title">MCQ Matrix Pro</span>
+      <button class="da-btn da-smart" onclick="openSmart()">🤖 Smart Gen</button>
+      <button class="da-btn da-dupcheck" onclick="openDupCheck()">🔍 Dup Check</button>
       <button class="da-btn da-chat" onclick="openChat()">💬 AI Chat</button>
-      <button class="da-btn da-teacher" onclick="openTeacher()">🤖 AI Teacher</button>
+      <button class="da-btn da-teacher" onclick="openTeacher()">🎓 AI Teacher</button>
       <button class="da-btn da-news" onclick="openNews()">📰 News</button>
+      <button class="da-btn da-ainews" onclick="openAiNews()">📡 AI News</button>
       <div class="bell-wrap" onclick="openNotif()">
         <button class="bell-btn">🔔</button>
         <div class="bell-badge" id="bellBadgeDesk">0</div>
       </div>
+    </div>
+
+    <!-- ══ SECTION FILTER BAR ══ -->
+    <div class="sec-filter-bar" id="secFilterBar" style="display:none">
+      <span class="sec-filter-label">Section:</span>
+      <button class="sec-btn active-all" id="sfAll" onclick="setSectionFilter('all',this)">
+        All <span class="sec-count" id="sfAllCnt">0</span>
+      </button>
+      <button class="sec-btn" id="sfReas" onclick="setSectionFilter('Reasoning',this)" style="color:var(--c-reasoning);border-color:var(--c-reasoning)40">
+        🧠 Reasoning <span class="sec-count" id="sfReasCnt">0</span>
+      </button>
+      <button class="sec-btn" id="sfGK" onclick="setSectionFilter('General Awareness',this)" style="color:var(--c-gk);border-color:var(--c-gk)40">
+        📰 GK <span class="sec-count" id="sfGKCnt">0</span>
+      </button>
+      <button class="sec-btn" id="sfQuant" onclick="setSectionFilter('Quantitative Aptitude',this)" style="color:var(--c-quant);border-color:var(--c-quant)40">
+        🔢 Quant <span class="sec-count" id="sfQuantCnt">0</span>
+      </button>
+      <button class="sec-btn" id="sfEng" onclick="setSectionFilter('English',this)" style="color:var(--c-english);border-color:var(--c-english)40">
+        📝 English <span class="sec-count" id="sfEngCnt">0</span>
+      </button>
+      <span class="sec-filter-info" id="secFilterInfo"></span>
     </div>
 
     <div class="panel-tabs">
@@ -384,21 +486,11 @@ select option{background:var(--s2)}
     <div class="panels">
       <div class="panel" id="panel0">
         <div class="panel-title">01 — Parse & Save</div>
-        <textarea id="userInput" placeholder="MCQ text yahan paste karein...&#10;Hindi ya English — koi bhi format"></textarea>
+        <textarea id="userInput" placeholder="MCQ text yahan paste karein..."></textarea>
         <button class="btn btn-green btn-full" onclick="processData()">⚡ Parse Now</button>
         <div class="input-row" style="margin-bottom:9px">
           <input type="text" id="topicName" placeholder="Topic name">
-          <select id="subjectSelect">
-            <option value="">Subject</option>
-            <option value="history">History</option>
-            <option value="geography">Geography</option>
-            <option value="polity">Polity & Governance</option>
-            <option value="currentaffairs">Current Affairs</option>
-            <option value="maths">Maths & Reasoning</option>
-            <option value="science">Science & Tech</option>
-            <option value="economics">Economics</option>
-            <option value="other">Other / General</option>
-          </select>
+          <select id="subjectSelect"><option value="">Subject</option></select>
         </div>
         <button class="btn btn-blue btn-full" onclick="saveToDB()">💾 Save to MongoDB</button>
         <div id="quizResult" style="margin-top:12px"></div>
@@ -418,10 +510,7 @@ select option{background:var(--s2)}
 <!-- AI CHAT PANEL -->
 <div class="ai-panel" id="chatPanel">
   <div class="aip-head">
-    <div class="aip-info">
-      <div class="aip-title" style="color:var(--purple)">💬 AI Chat</div>
-      <div class="aip-sub">Session mein yaad rakhega — cross = memory clear</div>
-    </div>
+    <div class="aip-info"><div class="aip-title" style="color:var(--purple)">💬 AI Chat</div><div class="aip-sub">Session mein yaad rakhega</div></div>
     <button class="aip-close" onclick="closeChat()">✕</button>
   </div>
   <div class="chat-msgs" id="chatMsgs"></div>
@@ -434,47 +523,59 @@ select option{background:var(--s2)}
 <!-- AI TEACHER PANEL -->
 <div class="ai-panel" id="teacherPanel">
   <div class="aip-head">
-    <div class="aip-info">
-      <div class="aip-title" style="color:var(--orange)">🤖 AI Teacher</div>
-      <div class="aip-sub">Subject + Topic → AI naye unique questions banayega</div>
-    </div>
+    <div class="aip-info"><div class="aip-title" style="color:var(--orange)">🎓 AI Teacher</div><div class="aip-sub">SSC/UPSC level questions generate hoge</div></div>
     <button class="aip-close" onclick="closeTeacher()">✕</button>
   </div>
   <div class="teacher-config">
-    <div>
-      <div class="tc-label">Subject</div>
-      <select id="tcSubject" onchange="loadTcTopics()">
-        <option value="">— Subject choose karo —</option>
-        <option value="history">History</option>
-        <option value="geography">Geography</option>
-        <option value="polity">Polity & Governance</option>
-        <option value="currentaffairs">Current Affairs</option>
-        <option value="maths">Maths & Reasoning</option>
-        <option value="science">Science & Tech</option>
-        <option value="economics">Economics</option>
-        <option value="other">Other / General</option>
-      </select>
-    </div>
-    <div>
-      <div class="tc-label">Topic <span id="tcQCount" style="color:var(--accent);font-family:var(--mono)"></span></div>
-      <select id="tcTopic"><option value="">— Pehle subject choose karo —</option></select>
-    </div>
+    <div><div class="tc-label">Subject</div><select id="tcSubject" onchange="loadTcTopics()"><option value="">— Subject choose karo —</option></select></div>
+    <div><div class="tc-label">Topic <span id="tcQCount" style="color:var(--accent);font-family:var(--mono)"></span></div><select id="tcTopic"><option value="">— Pehle subject choose karo —</option></select></div>
     <div class="tc-row">
       <div style="flex:1"><div class="tc-label">Count</div><input type="number" id="tcCount" value="4" min="1" max="20" style="margin-bottom:0"></div>
-      <div style="flex:1"><div class="tc-label">Type</div>
-        <select id="tcType" style="margin-bottom:0">
-          <option value="mixed">Mixed</option>
-          <option value="mcq">Only MCQ</option>
-          <option value="fill">Only Fill</option>
-          <option value="tf">Only T/F</option>
-        </select>
-      </div>
+      <div style="flex:1"><div class="tc-label">Type</div><select id="tcType" style="margin-bottom:0"><option value="mixed">Mixed</option><option value="mcq">Only MCQ</option><option value="fill">Only Fill</option><option value="tf">Only T/F</option></select></div>
     </div>
     <button class="tc-gen-btn" onclick="generateTeacherQ()" id="tcGenBtn">🚀 Generate Questions</button>
   </div>
-  <div class="teacher-output" id="teacherOutput">
-    <div class="empty"><div class="empty-icon">🎓</div>Subject aur topic choose karo</div>
+  <div class="teacher-output" id="teacherOutput"><div class="empty"><div class="empty-icon">🎓</div>Subject aur topic choose karo</div></div>
+</div>
+
+<!-- SMART GEN PANEL -->
+<div class="ai-panel" id="smartPanel">
+  <div class="aip-head">
+    <div class="aip-info"><div class="aip-title" style="color:var(--teal)">🤖 Smart AI Generator</div><div class="aip-sub">Auto duplicate check → Generate → Auto Save</div></div>
+    <button class="aip-close" onclick="closeSmart()">✕</button>
   </div>
+  <div class="sg-config">
+    <div><div class="tc-label">Subject</div><select id="sgSubject" onchange="loadSgTopics()" style="margin-bottom:0"><option value="">— Subject choose karo —</option></select></div>
+    <div><div class="tc-label">Topic <span id="sgTopicInfo" style="color:var(--accent);font-family:var(--mono)"></span></div><select id="sgTopic" style="margin-bottom:0"><option value="">— Pehle subject choose karo —</option></select></div>
+    <div class="tc-row">
+      <div style="flex:1"><div class="tc-label">Questions</div><select id="sgCount" style="margin-bottom:0"><option value="20">20</option><option value="30" selected>30</option><option value="40">40</option><option value="50">50</option></select></div>
+      <div style="flex:1"><div class="tc-label">Type</div><select id="sgType" style="margin-bottom:0"><option value="mcq">Only MCQ</option><option value="mixed">Mixed</option><option value="tf">Only T/F</option><option value="fill">Only Fill</option></select></div>
+    </div>
+    <div><div class="tc-label">Custom Prompt (optional)</div><textarea id="sgPrompt" style="min-height:55px;margin-bottom:0;font-size:12px" placeholder="e.g. 'focus on dates', 'hard difficulty'"></textarea></div>
+    <button class="sg-gen-btn" onclick="runSmartGen()" id="sgGenBtn">⚡ Smart Generate & Save</button>
+  </div>
+  <div class="sg-meta-bar">
+    <div class="sg-meta-chip sg-chip-token" id="sgTokenChip">🪙 —</div>
+    <div class="sg-meta-chip sg-chip-time" id="sgTimeChip">⏱ —</div>
+    <div class="sg-meta-chip sg-chip-saved" id="sgSavedChip">💾 —</div>
+    <div class="timer-ring-wrap"><svg class="timer-ring" viewBox="0 0 30 30"><circle class="timer-ring-bg" cx="15" cy="15" r="12"/><circle class="timer-ring-fg" id="timerRingFg" cx="15" cy="15" r="12"/></svg><span class="timer-label" id="timerLabel">70s</span></div>
+  </div>
+  <div class="sg-output" id="sgOutput"><div class="empty"><div class="empty-icon">🚀</div>Generate karo</div></div>
+</div>
+
+<!-- DUPLICATE CHECKER PANEL -->
+<div class="ai-panel" id="dupPanel">
+  <div class="aip-head">
+    <div class="aip-info"><div class="aip-title" style="color:var(--pink)">🔍 Duplicate Checker</div><div class="aip-sub">Duplicates scan aur delete karo</div></div>
+    <button class="aip-close" onclick="closeDupCheck()">✕</button>
+  </div>
+  <div class="dup-config">
+    <div><div class="tc-label">Subject</div><select id="dupSubject" onchange="loadDupTopics()" style="margin-bottom:0"><option value="">— Subject choose karo —</option></select></div>
+    <div><div class="tc-label">Topic</div><select id="dupTopic" style="margin-bottom:0"><option value="__all__">All Topics</option></select></div>
+    <button class="dup-scan-btn" onclick="runDupScan()" id="dupScanBtn">🔍 Scan for Duplicates</button>
+    <button class="dup-delete-all-btn" id="dupDeleteAllBtn" onclick="runDupDelete()">🗑️ Delete All Duplicates</button>
+  </div>
+  <div class="dup-output" id="dupOutput"><div class="empty"><div class="empty-icon">🔍</div>Subject choose karo</div></div>
 </div>
 
 <!-- NOTIFICATION PANEL -->
@@ -486,90 +587,59 @@ select option{background:var(--s2)}
       <button class="notif-close" onclick="closeNotif()">✕</button>
     </div>
   </div>
-  <div class="notif-list" id="notifList">
-    <div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div>
-  </div>
+  <div class="notif-list" id="notifList"><div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div></div>
 </div>
 
 <!-- NEWS PANEL -->
 <div id="newsPanel">
   <div class="aip-head" style="flex-shrink:0">
-    <div class="aip-info">
-      <div class="aip-title" style="color:var(--gold)" id="newsPanelTitle">📰 News Manager</div>
-      <div class="aip-sub" id="newsPanelSub">Saari news — filter, dekho, add karo</div>
-    </div>
+    <div class="aip-info"><div class="aip-title" style="color:var(--gold)" id="newsPanelTitle">📰 News Manager</div><div class="aip-sub" id="newsPanelSub">Saari news</div></div>
     <div style="display:flex;gap:6px;align-items:center">
       <button id="newsAddBtn" onclick="showNewsAdd()" style="font-size:11px;font-weight:700;padding:5px 11px;border-radius:7px;background:rgba(251,191,36,.12);color:var(--gold);border:1px solid rgba(251,191,36,.3);cursor:pointer">+ Add</button>
       <button class="aip-close" onclick="closeNews()">✕</button>
     </div>
   </div>
-
-  <!-- VIEW 1: News List (default) -->
   <div id="newsViewList" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
-    <!-- Filters -->
     <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s2);display:flex;gap:7px;flex-shrink:0;flex-wrap:wrap">
-      <select id="newsFilterTopic" onchange="filterNews()" style="flex:1;min-width:120px;margin-bottom:0;padding:6px 9px;font-size:12px">
-        <option value="">All Topics</option>
-      </select>
+      <select id="newsFilterTopic" onchange="filterNews()" style="flex:1;min-width:120px;margin-bottom:0;padding:6px 9px;font-size:12px"><option value="">All Topics</option></select>
       <select id="newsFilterDate" onchange="filterNews()" style="flex:1;min-width:110px;margin-bottom:0;padding:6px 9px;font-size:12px">
-        <option value="">All Dates</option>
-        <option value="today">Today</option>
-        <option value="week">This Week</option>
-        <option value="month">This Month</option>
+        <option value="">All Dates</option><option value="today">Today</option><option value="week">This Week</option><option value="month">This Month</option>
       </select>
     </div>
-    <div id="newsListItems" style="flex:1;overflow-y:auto;padding:10px 12px">
-      <div class="empty"><div class="empty-icon">📭</div>Loading...</div>
-    </div>
+    <div id="newsListItems" style="flex:1;overflow-y:auto;padding:10px 12px"><div class="empty"><div class="empty-icon">📭</div>Loading...</div></div>
   </div>
-
-  <!-- VIEW 2: News Detail -->
   <div id="newsViewDetail" style="display:none;flex:1;overflow-y:auto;padding:14px 15px;min-height:0">
     <button onclick="showNewsList()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--s3);color:var(--muted);border:1px solid var(--border);cursor:pointer;margin-bottom:14px">← Back</button>
     <div id="newsDetailContent"></div>
   </div>
-
-  <!-- VIEW 3: Add News -->
   <div id="newsViewAdd" style="display:none;flex:1;min-height:0;overflow:hidden;flex-direction:column">
-    <div class="news-form" style="flex:1;overflow-y:auto">
-      <button onclick="showNewsList()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--s3);color:var(--muted);border:1px solid var(--border);cursor:pointer;margin-bottom:12px">← Back to List</button>
-
-      <!-- STEP 1 -->
+    <div class="news-form">
+      <button onclick="showNewsList()" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--s3);color:var(--muted);border:1px solid var(--border);cursor:pointer;margin-bottom:12px">← Back</button>
       <div id="newsStep1">
-        <div class="tc-label">Title</div>
-        <input type="text" id="newsTitle" placeholder="News ka title...">
-        <div class="tc-label">Content (paragraph, MCQ, ya mix — kuch bhi)</div>
-        <textarea id="newsContent" placeholder="Yahan content daalo...&#10;AI isko better banayega aur MCQ alag karega." style="min-height:140px"></textarea>
+        <div class="tc-label">Title</div><input type="text" id="newsTitle" placeholder="News ka title...">
+        <div class="tc-label">Content</div><textarea id="newsContent" placeholder="Content daalo..." style="min-height:140px"></textarea>
         <button class="news-ai-btn" onclick="aiProcessNews()" id="newsAiBtn">🤖 AI se Improve Karo</button>
       </div>
-
-      <!-- STEP 2 -->
       <div id="newsStep2" style="display:none">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green)">✅ AI Result</span>
+          <span style="font-size:11px;font-weight:700;color:var(--green)">✅ AI Result</span>
           <button onclick="newsReset()" style="font-size:11px;padding:3px 9px;border-radius:5px;background:rgba(255,107,107,.1);color:var(--red);border:1px solid rgba(255,107,107,.2);cursor:pointer">↩ Reset</button>
         </div>
-        <div class="tc-label">📝 Improved Paragraph</div>
+        <div class="tc-label">📝 Paragraph</div>
         <div id="newsParagraphBox" class="news-preview-box" style="margin-bottom:12px"></div>
-
         <div id="newsMcqSection">
           <div id="newsMcqFound" style="display:none">
-            <div class="tc-label" style="display:flex;align-items:center;justify-content:space-between">
-              <span>❓ MCQs</span>
-              <span id="mcqCountLabel" style="color:var(--accent);font-family:var(--mono);font-size:11px"></span>
-            </div>
+            <div class="tc-label">❓ MCQs <span id="mcqCountLabel" style="color:var(--accent);font-family:var(--mono);font-size:11px"></span></div>
             <div id="newsMcqBoxes"></div>
           </div>
           <div id="newsMcqAsk" style="display:none">
             <div style="background:var(--s3);border:1px solid var(--border);border-radius:9px;padding:13px">
-              <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">❓ MCQ banana hai?</div>
-              <div style="font-size:11px;color:var(--muted);margin-bottom:11px">Is paragraph se SSC/UPSC level MCQs generate karo</div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:11px">❓ MCQ banana hai?</div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <div style="display:flex;gap:5px">
                   <button class="mcq-count-chip active" onclick="setMcqCount(this,2)">2</button>
                   <button class="mcq-count-chip" onclick="setMcqCount(this,4)">4</button>
                   <button class="mcq-count-chip" onclick="setMcqCount(this,6)">6</button>
-                  <button class="mcq-count-chip" onclick="setMcqCount(this,10)">10</button>
                   <input type="number" id="mcqCustomCount" placeholder="?" min="1" max="20" style="width:50px;padding:4px 7px;font-size:12px;margin-bottom:0;border-radius:6px" oninput="setMcqCount(null,this.value)">
                 </div>
                 <button id="genMcqBtn" class="tc-gen-btn" style="flex:1;padding:8px 12px;font-size:12px" onclick="genMcqFromParagraph()">⚡ Banao</button>
@@ -583,50 +653,158 @@ select option{background:var(--s2)}
   </div>
 </div>
 
+<!-- AI NEWS PANEL (simplified) -->
+<div class="ai-panel" id="ainewsPanel">
+  <div class="aip-head">
+    <div class="aip-info"><div class="aip-title" style="color:#f59e0b">📡 AI News</div><div class="aip-sub">Tavily search + Groq</div></div>
+    <button class="aip-close" onclick="closeAiNews()">✕</button>
+  </div>
+  <div class="an-tabs">
+    <button class="an-tab active" onclick="anSwitchTab('anFetchView',this)">🔍 Fetch</button>
+    <button class="an-tab" onclick="anSwitchTab('anSchedView',this)">⏰ Schedule</button>
+    <button class="an-tab" onclick="anSwitchTab('anHistView',this);loadAnHistory()">📂 History</button>
+  </div>
+  <div class="an-view active" id="anFetchView" style="flex-direction:column">
+    <div class="an-section" style="border-top:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <span class="an-date-chip" id="anDateChip">📅 Loading...</span>
+        <span class="an-time-chip" id="anTimeChip">🕐 --:--</span>
+        <label class="an-daily-label"><input type="checkbox" class="an-daily-cb" id="anDailyChk"><span>Daily</span></label>
+      </div>
+      <textarea id="anPrompt" placeholder="Prompt likho..." style="min-height:65px;margin-bottom:6px;font-size:13px;resize:vertical"></textarea>
+      <button class="an-gen-btn" onclick="runAnFetch()" id="anGenBtn">📡 Fetch News</button>
+    </div>
+    <div class="an-meta-bar" id="anMetaBar">
+      <div class="sg-meta-chip sg-chip-token" id="anTokenChip">🪙 —</div>
+      <div class="sg-meta-chip sg-chip-time" id="anTimeUsed">⏱ —</div>
+    </div>
+    <div class="an-output" id="anOutput"><div class="empty"><div class="empty-icon">📡</div>Prompt likhkar fetch karo</div></div>
+  </div>
+  <div class="an-view" id="anSchedView" style="flex-direction:column;overflow-y:auto;padding:12px">
+    <div class="empty"><div class="empty-icon">⏰</div>Schedule feature</div>
+  </div>
+  <div class="an-view" id="anHistView" style="flex-direction:column;overflow:hidden">
+    <div style="flex:1;overflow-y:auto;padding:12px" id="anHistList"><div class="empty"><div class="empty-icon">📂</div>Loading...</div></div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════
-// SOCKET.IO
-// ═══════════════════════
 const socket = io();
 let unreadCount = 0;
-
-socket.on("new_notification", (notif) => {
-  unreadCount++;
-  updateBell();
-  prependNotif(notif);
-});
-
-function updateBell() {
-  ["bellBadge","bellBadgeDesk"].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = unreadCount > 99 ? "99+" : unreadCount;
-    el.classList.toggle("show", unreadCount > 0);
+socket.on("new_notification", (notif) => { unreadCount++; updateBell(); prependNotif(notif); });
+function updateBell(){
+  ["bellBadge","bellBadgeDesk"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.textContent=unreadCount>99?"99+":unreadCount;
+    el.classList.toggle("show",unreadCount>0);
   });
 }
-
-function prependNotif(n) {
-  const list = document.getElementById("notifList");
-  const empty = list.querySelector(".empty");
-  if (empty) empty.remove();
-  const d = new Date(n.savedAt);
-  const div = document.createElement("div");
-  div.className = "notif-item unread" + (n.type === "news" ? " news-type" : "");
-  div.innerHTML = `<div class="ni-msg">${n.message}</div>
-    <div class="ni-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>`;
+function prependNotif(n){
+  const list=document.getElementById("notifList");
+  const empty=list.querySelector(".empty");
+  if(empty) empty.remove();
+  const d=new Date(n.savedAt);
+  const div=document.createElement("div");
+  div.className="notif-item unread";
+  div.innerHTML=`<div class="ni-msg">${n.message}</div><div class="ni-meta">${d.toLocaleString("hi-IN")}</div>`;
   list.prepend(div);
 }
 
-// ═══════════════════════
-// STATE
-// ═══════════════════════
-let currentQA = null, allHistory = [], activeFilter = "all", chatHistory = [];
+// ══ STATE ══
+let currentQA=null, allHistory=[], activeFilter="all", chatHistory=[];
+let allSubjectsMap={};
+let sgTimerInterval=null, sgTimerSeconds=70;
 
-// ═══════════════════════
-// SIDEBAR
-// ═══════════════════════
+// ══ SECTION FILTER STATE ══
+let activeSectionFilter = 'all';
+let currentTopicQuestions = [];   // all questions of current topic
+let currentTopicSubject = '';
+let currentTopicName = '';
+
+// ══ SECTION COLORS ══
+const SEC_COLORS = {
+  'Reasoning':            '#00d4ff',
+  'General Awareness':    '#fbbf24',
+  'Quantitative Aptitude':'#00e676',
+  'English':              '#c77dff'
+};
+const SEC_SHORT = {
+  'Reasoning':'Reas','General Awareness':'GK','Quantitative Aptitude':'Quant','English':'Eng'
+};
+
+// ══ SUBJECTS ══
+async function loadSubjects(){
+  const res=await fetch("/api/subjects");
+  allSubjectsMap=await res.json();
+  buildSubjectTabs();
+  buildSubjectSelects();
+}
+function buildSubjectTabs(){
+  const tabs=document.getElementById("subjectTabs");
+  const allBtn=tabs.querySelector(".stab");
+  const addBtn=tabs.querySelector(".stab-add");
+  tabs.innerHTML="";
+  tabs.appendChild(allBtn);
+  const shortLabels={history:"Hist",geography:"Geo",polity:"Pol",currentaffairs:"CA",maths:"Math",science:"Sci",economics:"Eco",other:"Gen"};
+  Object.entries(allSubjectsMap).forEach(([key,label])=>{
+    const short=shortLabels[key]||label.slice(0,5);
+    const btn=document.createElement("button");
+    btn.className="stab"; btn.textContent=short; btn.title=label;
+    btn.onclick=()=>filterHistory(key,btn);
+    tabs.appendChild(btn);
+  });
+  tabs.appendChild(addBtn);
+}
+function buildSubjectSelects(){
+  const selects=["subjectSelect","tcSubject","sgSubject","dupSubject"];
+  selects.forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel) return;
+    const curVal=sel.value;
+    sel.innerHTML=id==="subjectSelect"?'<option value="">Subject</option>':'<option value="">— Subject choose karo —</option>';
+    Object.entries(allSubjectsMap).forEach(([key,label])=>{
+      const opt=document.createElement("option");
+      opt.value=key; opt.textContent=label;
+      sel.appendChild(opt);
+    });
+    if(curVal) sel.value=curVal;
+  });
+}
+
+// ══ SUBJECT MODAL ══
+function openSubjectModal(){document.getElementById("addSubjectModal").classList.add("show");setTimeout(()=>document.getElementById("newSubjectInput").focus(),100);}
+function closeSubjectModal(){document.getElementById("addSubjectModal").classList.remove("show");document.getElementById("newSubjectInput").value="";}
+async function confirmAddSubject(){
+  const label=document.getElementById("newSubjectInput").value.trim();
+  if(!label) return;
+  const res=await fetch("/api/subject/add",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({label})});
+  const d=await res.json();
+  if(d.error){showToast("❌ "+d.error,true);return;}
+  showToast("✅ Subject '"+d.label+"' add ho gaya!");
+  closeSubjectModal(); await loadSubjects();
+}
+
+// ══ TOPIC MODAL ══
+function openAddTopicModal(){
+  const modal=document.getElementById("addTopicModal");
+  const lbl=document.getElementById("addTopicSubjectLabel");
+  if(lbl) lbl.textContent=allSubjectsMap[activeFilter]||activeFilter;
+  modal.style.display="flex";
+  setTimeout(()=>document.getElementById("newTopicInput").focus(),100);
+}
+function closeAddTopicModal(){document.getElementById("addTopicModal").style.display="none";document.getElementById("newTopicInput").value="";}
+async function confirmAddTopic(){
+  const topicName=document.getElementById("newTopicInput").value.trim();
+  if(!topicName) return;
+  if(!activeFilter||activeFilter==="all") return showToast("Pehle ek subject select karo!",true);
+  await fetch("/api/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic:topicName,subject:activeFilter,data:[]})});
+  showToast("✅ Topic add ho gaya!"); closeAddTopicModal(); fetchHistory();
+}
+
+// ══ SIDEBAR ══
 function openSb(){document.getElementById("sidebar").classList.add("open");document.getElementById("sbOverlay").classList.add("show")}
 function closeSb(){document.getElementById("sidebar").classList.remove("open");document.getElementById("sbOverlay").classList.remove("show")}
 function switchPanel(idx,btn){
@@ -635,208 +813,253 @@ function switchPanel(idx,btn){
   btn.classList.add("active");
 }
 
-// ═══════════════════════
-// AI PANELS
-// ═══════════════════════
-function closeAllAI(){["chatPanel","teacherPanel","newsPanel"].forEach(id=>document.getElementById(id).classList.remove("open"));document.getElementById("aiOverlay").classList.remove("show")}
+// ══ PANELS ══
+function closeAllAI(){
+  ["chatPanel","teacherPanel","newsPanel","smartPanel","dupPanel","ainewsPanel"].forEach(id=>document.getElementById(id).classList.remove("open"));
+  document.getElementById("aiOverlay").classList.remove("show");
+}
 function openChat(){closeAllAI();document.getElementById("chatPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show");if(!chatHistory.length)renderChatMsgs();document.getElementById("chatInput").focus()}
 function closeChat(){document.getElementById("chatPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show");chatHistory=[];document.getElementById("chatMsgs").innerHTML=""}
 function openTeacher(){closeAllAI();document.getElementById("teacherPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show")}
 function closeTeacher(){document.getElementById("teacherPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show")}
-function openNews(){closeAllAI();document.getElementById("newsPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show");fetchNews();showNewsList();}
+function openNews(){closeAllAI();document.getElementById("newsPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show");fetchNews();showNewsList()}
 function closeNews(){document.getElementById("newsPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show")}
+function openSmart(){closeAllAI();document.getElementById("smartPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show")}
+function closeSmart(){document.getElementById("smartPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show")}
+function openDupCheck(){closeAllAI();document.getElementById("dupPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show")}
+function closeDupCheck(){document.getElementById("dupPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show")}
+function openAiNews(){closeAllAI();document.getElementById("ainewsPanel").classList.add("open");document.getElementById("aiOverlay").classList.add("show");anUpdateTime();}
+function closeAiNews(){document.getElementById("ainewsPanel").classList.remove("open");document.getElementById("aiOverlay").classList.remove("show")}
 
-// ═══════════════════════
-// NOTIFICATION PANEL
-// ═══════════════════════
-function openNotif(){
-  document.getElementById("notifPanel").classList.add("open");
-  document.getElementById("notifOverlay").classList.add("show");
-  unreadCount=0; updateBell();
-  document.querySelectorAll(".notif-item.unread").forEach(el=>el.classList.remove("unread"));
-}
+// ══ NOTIFICATIONS ══
+function openNotif(){document.getElementById("notifPanel").classList.add("open");document.getElementById("notifOverlay").classList.add("show");unreadCount=0;updateBell();document.querySelectorAll(".notif-item.unread").forEach(el=>el.classList.remove("unread"));}
 function closeNotif(){document.getElementById("notifPanel").classList.remove("open");document.getElementById("notifOverlay").classList.remove("show")}
-async function clearNotifs(){
-  await fetch("/api/notifications/clear",{method:"POST"});
-  document.getElementById("notifList").innerHTML='<div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div>';
-  unreadCount=0; updateBell();
-}
+async function clearNotifs(){await fetch("/api/notifications/clear",{method:"POST"});document.getElementById("notifList").innerHTML='<div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div>';unreadCount=0;updateBell();}
 async function fetchNotifs(){
-  const res = await fetch("/api/notifications");
-  const notifs = await res.json();
-  const list = document.getElementById("notifList");
+  const res=await fetch("/api/notifications");
+  const notifs=await res.json();
+  const list=document.getElementById("notifList");
   if(!notifs.length){list.innerHTML='<div class="empty"><div class="empty-icon">🔕</div>Koi notification nahi</div>';return;}
-  list.innerHTML = notifs.map(n=>{
-    const d = new Date(n.savedAt);
-    const isUnread = !n.readBy?.includes("all");
-    return `<div class="notif-item${isUnread?" unread":""}${n.type==="news"?" news-type":""}">
-      <div class="ni-msg">${n.message}</div>
-      ${n.count?`<div class="ni-detail">${n.count} questions</div>`:""}
-      <div class="ni-meta">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>
-    </div>`;
+  list.innerHTML=notifs.map(n=>{
+    const d=new Date(n.savedAt);
+    return `<div class="notif-item${!n.readBy?.includes("all")?" unread":""}"><div class="ni-msg">${n.message}</div><div class="ni-meta">${d.toLocaleString("hi-IN")}</div></div>`;
   }).join("");
-  const unread = notifs.filter(n=>!n.readBy?.includes("all")).length;
+  const unread=notifs.filter(n=>!n.readBy?.includes("all")).length;
   if(unread>0){unreadCount=unread;updateBell();}
 }
 
-function toggleNewsList(){}
-
-// ═══════════════════════
-// NEWS — 3 View System
-// ═══════════════════════
-let newsProcessed={paragraph:"",mcqs:[]};
-let selectedMcqCount=2;
-let allNewsData=[];
-
-function showNewsList(){
-  document.getElementById("newsViewList").style.display="flex";
-  document.getElementById("newsViewDetail").style.display="none";
-  document.getElementById("newsViewAdd").style.display="none";
-  document.getElementById("newsPanelSub").textContent="Saari news — filter, dekho, add karo";
-  document.getElementById("newsAddBtn").style.display="inline-block";
+// ══ TIMER ══
+const TIMER_MAX=70;
+function startTimer(){
+  if(sgTimerInterval) clearInterval(sgTimerInterval);
+  sgTimerSeconds=TIMER_MAX; updateTimerDisplay();
+  sgTimerInterval=setInterval(()=>{sgTimerSeconds--;if(sgTimerSeconds<=0)sgTimerSeconds=TIMER_MAX;updateTimerDisplay();},1000);
 }
-function showNewsAdd(){
-  document.getElementById("newsViewList").style.display="none";
-  document.getElementById("newsViewDetail").style.display="none";
-  document.getElementById("newsViewAdd").style.display="flex";
-  document.getElementById("newsPanelSub").textContent="Title + content → AI improve karega";
-  document.getElementById("newsAddBtn").style.display="none";
-  newsReset();
+function updateTimerDisplay(){
+  const label=document.getElementById("timerLabel"),fg=document.getElementById("timerRingFg");
+  if(!label||!fg) return;
+  label.textContent=sgTimerSeconds+"s";
+  const pct=sgTimerSeconds/TIMER_MAX;
+  fg.style.strokeDashoffset=88*(1-pct);
+  const hue=pct>0.5?120:Math.round(pct*240);
+  fg.style.stroke=`hsl(${hue},80%,55%)`;
+  label.style.color=fg.style.stroke;
 }
+
+// ══════════════════════════════════════════════════════════
+// SECTION FILTER — Main feature
+// ══════════════════════════════════════════════════════════
+function setSectionFilter(sec, btn) {
+  activeSectionFilter = sec;
+
+  // Reset all buttons
+  document.querySelectorAll('.sec-btn').forEach(b => {
+    b.className = 'sec-btn';
+    const s = b.dataset.sec;
+    if(s && SEC_COLORS[s]) {
+      b.style.color = SEC_COLORS[s];
+      b.style.borderColor = SEC_COLORS[s]+'40';
+      b.style.background = 'transparent';
+    } else {
+      b.style.color = '';
+      b.style.borderColor = '';
+      b.style.background = '';
+    }
+  });
+
+  // Set active
+  if(sec === 'all') {
+    btn.className = 'sec-btn active-all';
+    btn.style.color=''; btn.style.borderColor=''; btn.style.background='';
+  } else if(sec === 'Reasoning') { btn.className = 'sec-btn active-reas'; btn.style.color=''; btn.style.borderColor=''; btn.style.background=''; }
+  else if(sec === 'General Awareness') { btn.className = 'sec-btn active-gk'; btn.style.color=''; btn.style.borderColor=''; btn.style.background=''; }
+  else if(sec === 'Quantitative Aptitude') { btn.className = 'sec-btn active-quant'; btn.style.color=''; btn.style.borderColor=''; btn.style.background=''; }
+  else if(sec === 'English') { btn.className = 'sec-btn active-eng'; btn.style.color=''; btn.style.borderColor=''; btn.style.background=''; }
+
+  renderFilteredQuestions();
+}
+
+function renderFilteredQuestions() {
+  const filtered = activeSectionFilter === 'all'
+    ? currentTopicQuestions
+    : currentTopicQuestions.filter(q => q.section === activeSectionFilter);
+
+  const info = document.getElementById('secFilterInfo');
+  if(info) info.textContent = filtered.length + '/' + currentTopicQuestions.length + 'Q';
+
+  const sfStat = document.getElementById('secFilterStat');
+  const sfCnt = document.getElementById('secFilterCount');
+  if(sfStat) sfStat.style.display = activeSectionFilter !== 'all' ? 'flex' : 'none';
+  if(sfCnt) sfCnt.textContent = filtered.length;
+
+  renderQuiz(filtered);
+}
+
+function updateSectionFilterCounts(questions) {
+  const counts = { Reasoning: 0, 'General Awareness': 0, 'Quantitative Aptitude': 0, English: 0 };
+  questions.forEach(q => { if(counts[q.section] !== undefined) counts[q.section]++; });
+
+  const total = questions.length;
+  document.getElementById('sfAllCnt').textContent = total;
+  document.getElementById('sfReasCnt').textContent = counts['Reasoning'];
+  document.getElementById('sfGKCnt').textContent = counts['General Awareness'];
+  document.getElementById('sfQuantCnt').textContent = counts['Quantitative Aptitude'];
+  document.getElementById('sfEngCnt').textContent = counts['English'];
+
+  // Set dataset for color restoration
+  document.getElementById('sfReas').dataset.sec = 'Reasoning';
+  document.getElementById('sfGK').dataset.sec = 'General Awareness';
+  document.getElementById('sfQuant').dataset.sec = 'Quantitative Aptitude';
+  document.getElementById('sfEng').dataset.sec = 'English';
+}
+
+// ══ SMART GEN ══
+async function loadSgTopics(){
+  const sub=document.getElementById("sgSubject").value;
+  const topicSel=document.getElementById("sgTopic");
+  document.getElementById("sgTopicInfo").textContent="";
+  if(!sub){topicSel.innerHTML='<option value="">— Pehle subject choose karo —</option>';return;}
+  topicSel.innerHTML='<option value="">Loading...</option>';
+  try{
+    const res=await fetch(`/api/public/topics/${sub}`);
+    const topics=await res.json();
+    const total=topics.reduce((s,t)=>s+t.count,0);
+    document.getElementById("sgTopicInfo").textContent=`(${total}Q saved)`;
+    topicSel.innerHTML='<option value="__all__">All Topics</option>'+topics.map(t=>`<option value="${escH(t.topic)}">${t.topic} (${t.count}Q)</option>`).join("");
+  }catch(e){topicSel.innerHTML='<option value="">Error</option>';}
+}
+async function runSmartGen(){
+  const sub=document.getElementById("sgSubject").value;
+  const topic=document.getElementById("sgTopic").value;
+  const count=parseInt(document.getElementById("sgCount").value)||30;
+  const type=document.getElementById("sgType").value;
+  const userPrompt=document.getElementById("sgPrompt").value.trim();
+  if(!sub) return showToast("Subject choose karo!",true);
+  const btn=document.getElementById("sgGenBtn"); btn.textContent="⏳ Generating..."; btn.disabled=true;
+  startTimer();
+  document.getElementById("sgOutput").innerHTML='<div class="empty loading"><div class="empty-icon">🤖</div>Generating...</div>';
+  const t0=performance.now();
+  try{
+    const res=await fetch("/api/smart-generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:sub,topic:topic==="__all__"?"":topic,count,type,userPrompt})});
+    const d=await res.json();
+    const elapsed=((performance.now()-t0)/1000).toFixed(1);
+    document.getElementById("sgTokenChip").textContent=`🪙 ${d.tokens?.total||"?"} tokens`;
+    document.getElementById("sgTimeChip").textContent=`⏱ ${d.timeTaken||elapsed}s`;
+    document.getElementById("sgSavedChip").textContent=`💾 ${d.unique||0} saved`;
+    if(!d.questions||!d.questions.length){document.getElementById("sgOutput").innerHTML='<div class="empty"><div class="empty-icon">⚠️</div>Koi unique questions nahi</div>';}
+    else{renderSgOutput(d);}
+    showToast(`✅ ${d.unique} questions saved!`);
+    fetchHistory();
+  }catch(e){document.getElementById("sgOutput").innerHTML=`<div class="empty"><div class="empty-icon">❌</div>${e.message}</div>`;showToast("❌ "+e.message,true);}
+  btn.textContent="⚡ Smart Generate & Save"; btn.disabled=false;
+}
+function renderSgOutput(d){
+  const qs=d.questions||[];
+  const statsHtml=`<div class="sg-stat-box"><div class="sg-stat"><div class="sg-stat-val" style="color:var(--teal)">${d.unique||qs.length}</div><div class="sg-stat-lbl">Generated</div></div><div class="sg-stat"><div class="sg-stat-val" style="color:var(--green)">${d.unique||0}</div><div class="sg-stat-lbl">Saved</div></div><div class="sg-stat"><div class="sg-stat-val" style="color:var(--gold)">${d.timeTaken||"?"}s</div><div class="sg-stat-lbl">Time</div></div></div>`;
+  const cardsHtml=qs.map((q,i)=>`<div class="sg-q-card" style="animation-delay:${i*0.04}s"><div class="sg-q-num">Q ${String(i+1).padStart(2,"0")}</div><div class="sg-q-text">${q.question}</div>${q.options?.length?`<div class="sg-opts">${q.options.map(o=>`<div class="sg-opt">${o}</div>`).join("")}</div>`:""}<div class="sg-ans">✓ ${q.answer}</div>${q.explanation?`<div class="sg-exp">💡 ${q.explanation}</div>`:""}</div>`).join("");
+  document.getElementById("sgOutput").innerHTML=statsHtml+cardsHtml;
+}
+
+// ══ DUP CHECK ══
+async function loadDupTopics(){
+  const sub=document.getElementById("dupSubject").value;
+  const topicSel=document.getElementById("dupTopic");
+  if(!sub){topicSel.innerHTML='<option value="__all__">All Topics</option>';return;}
+  topicSel.innerHTML='<option value="__all__">All Topics</option>';
+  try{const res=await fetch(`/api/public/topics/${sub}`);const topics=await res.json();topicSel.innerHTML='<option value="__all__">All Topics</option>'+topics.map(t=>`<option value="${escH(t.topic)}">${t.topic} (${t.count}Q)</option>`).join("");}catch(e){}
+}
+async function runDupScan(){
+  const sub=document.getElementById("dupSubject").value;
+  const topic=document.getElementById("dupTopic").value;
+  if(!sub) return showToast("Subject choose karo!",true);
+  const btn=document.getElementById("dupScanBtn"); btn.textContent="🔍 Scanning..."; btn.disabled=true;
+  document.getElementById("dupOutput").innerHTML='<div class="empty loading"><div class="empty-icon">🔍</div>Scanning...</div>';
+  document.getElementById("dupDeleteAllBtn").style.display="none";
+  try{const res=await fetch("/api/duplicate-check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:sub,topic:topic||"__all__"})});const d=await res.json();renderDupOutput(d);}
+  catch(e){document.getElementById("dupOutput").innerHTML=`<div class="empty"><div class="empty-icon">❌</div>${e.message}</div>`;}
+  btn.textContent="🔍 Scan for Duplicates"; btn.disabled=false;
+}
+function renderDupOutput(d){
+  const out=document.getElementById("dupOutput"),delBtn=document.getElementById("dupDeleteAllBtn");
+  if(!d.duplicates||!d.duplicates.length){out.innerHTML='<div class="empty"><div class="empty-icon">✅</div>Koi duplicate nahi!</div>';delBtn.style.display="none";return;}
+  delBtn.style.display="block";
+  const totalDups=d.duplicates.reduce((s,dup)=>s+(dup.occurrences.length-1),0);
+  out.innerHTML=`<div class="dup-summary"><div class="sg-stat"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--pink)">${d.total}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Duplicates</div></div><div class="sg-stat"><div style="font-size:22px;font-weight:800;font-family:var(--mono);color:var(--red)">${totalDups}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Extra Copies</div></div></div>`+d.duplicates.map((dup,i)=>`<div class="dup-item" style="animation-delay:${i*0.04}s"><div class="dup-badge">⚠️ ${dup.occurrences.length}x</div><div class="dup-q">${dup.question}</div><div class="dup-occ">${dup.occurrences.map(o=>`<div class="dup-occ-item">📁 ${o.topic}</div>`).join("")}</div></div>`).join("");
+}
+async function runDupDelete(){
+  const sub=document.getElementById("dupSubject").value,topic=document.getElementById("dupTopic").value;
+  if(!sub) return;
+  if(!confirm("Saare duplicates delete karein?")) return;
+  const btn=document.getElementById("dupDeleteAllBtn"); btn.textContent="⏳ Deleting..."; btn.disabled=true;
+  try{const res=await fetch("/api/duplicate-delete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:sub,topic:topic||"__all__"})});const d=await res.json();showToast(`✅ ${d.deleted} duplicates removed!`);await runDupScan();fetchHistory();}
+  catch(e){showToast("❌ "+e.message,true);}
+  btn.textContent="🗑️ Delete All Duplicates"; btn.disabled=false;
+}
+
+// ══ NEWS ══
+let newsProcessed={paragraph:"",mcqs:[]},selectedMcqCount=2,allNewsData=[];
+function showNewsList(){document.getElementById("newsViewList").style.display="flex";document.getElementById("newsViewDetail").style.display="none";document.getElementById("newsViewAdd").style.display="none";document.getElementById("newsPanelSub").textContent="Saari news";document.getElementById("newsAddBtn").style.display="inline-block";}
+function showNewsAdd(){document.getElementById("newsViewList").style.display="none";document.getElementById("newsViewDetail").style.display="none";document.getElementById("newsViewAdd").style.display="flex";document.getElementById("newsAddBtn").style.display="none";newsReset();}
 function showNewsDetail(news){
-  document.getElementById("newsViewList").style.display="none";
-  document.getElementById("newsViewAdd").style.display="none";
-  document.getElementById("newsViewDetail").style.display="block";
-  document.getElementById("newsPanelSub").textContent=news.title||"News Detail";
-  document.getElementById("newsAddBtn").style.display="none";
+  document.getElementById("newsViewList").style.display="none";document.getElementById("newsViewAdd").style.display="none";document.getElementById("newsViewDetail").style.display="block";document.getElementById("newsAddBtn").style.display="none";
   const d=new Date(news.savedAt);
-  const mcqSection=news.hasMcq&&news.mcqs&&news.mcqs.length?`
-    <div style="margin-top:16px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">❓ ${news.mcqs.length} MCQs</div>
-      ${news.mcqs.map((q,i)=>`
-        <div class="nd-mcq-item">
-          <div class="nd-q">Q${i+1}. ${q.question}</div>
-          <div class="nd-opts">${(q.options||[]).map(o=>`<div class="nd-opt">${o}</div>`).join("")}</div>
-          <div class="nd-ans">✓ ${q.answer}</div>
-          ${q.explanation?`<div class="nd-exp">💡 ${q.explanation}</div>`:""}
-        </div>`).join("")}
-    </div>`:`<div style="font-size:12px;color:var(--muted);margin-top:12px;padding:10px 12px;background:var(--s2);border-radius:8px">Koi MCQ nahi</div>`;
-  document.getElementById("newsDetailContent").innerHTML=`
-    <div class="nd-title">${news.title||"(No title)"}</div>
-    <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</div>
-    ${news.content?`<div class="nd-para">${news.content}</div>`:""}
-    ${mcqSection}
-    <button onclick="deleteNewsById('${news._id}')" style="margin-top:16px;font-size:11px;font-weight:700;padding:6px 14px;border-radius:7px;background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.2);cursor:pointer">🗑️ Delete</button>`;
+  const mcqSection=news.hasMcq&&news.mcqs?.length?`<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:10px">❓ ${news.mcqs.length} MCQs</div>${news.mcqs.map((q,i)=>`<div class="nd-mcq-item"><div class="nd-q">Q${i+1}. ${q.question}</div><div class="nd-opts">${(q.options||[]).map(o=>`<div class="nd-opt">${o}</div>`).join("")}</div><div class="nd-ans">✓ ${q.answer}</div></div>`).join("")}</div>`:`<div style="font-size:12px;color:var(--muted);margin-top:12px;padding:10px;background:var(--s2);border-radius:8px">Koi MCQ nahi</div>`;
+  document.getElementById("newsDetailContent").innerHTML=`<div class="nd-title">${news.title||"(No title)"}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">${d.toLocaleString("hi-IN")}</div>${news.content?`<div class="nd-para">${news.content}</div>`:""}${mcqSection}<button onclick="deleteNewsById('${news._id}')" style="margin-top:16px;font-size:11px;font-weight:700;padding:6px 14px;border-radius:7px;background:rgba(255,68,68,.1);color:var(--red);border:1px solid rgba(255,68,68,.2);cursor:pointer">🗑️ Delete</button>`;
 }
-
 function filterNews(){
-  const topicVal=document.getElementById("newsFilterTopic").value;
-  const dateVal=document.getElementById("newsFilterDate").value;
+  const topicVal=document.getElementById("newsFilterTopic").value,dateVal=document.getElementById("newsFilterDate").value;
   let filtered=[...allNewsData];
   if(topicVal) filtered=filtered.filter(n=>n.title===topicVal);
-  if(dateVal){
-    const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-    const week=new Date(today);week.setDate(today.getDate()-7);
-    const month=new Date(today);month.setDate(today.getDate()-30);
-    if(dateVal==="today") filtered=filtered.filter(n=>new Date(n.savedAt)>=today);
-    else if(dateVal==="week") filtered=filtered.filter(n=>new Date(n.savedAt)>=week);
-    else if(dateVal==="month") filtered=filtered.filter(n=>new Date(n.savedAt)>=month);
-  }
+  if(dateVal){const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());const week=new Date(today);week.setDate(today.getDate()-7);const month=new Date(today);month.setDate(today.getDate()-30);if(dateVal==="today") filtered=filtered.filter(n=>new Date(n.savedAt)>=today);else if(dateVal==="week") filtered=filtered.filter(n=>new Date(n.savedAt)>=week);else if(dateVal==="month") filtered=filtered.filter(n=>new Date(n.savedAt)>=month);}
   renderNewsList(filtered);
 }
-
 function renderNewsList(list){
   const el=document.getElementById("newsListItems");
   if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div>Koi news nahi</div>';return;}
-  el.innerHTML=list.map(n=>{
-    const d=new Date(n.savedAt);
-    const badge=n.hasMcq?`<span class="news-li-mcq">${n.mcqs?.length||0} MCQ</span>`:"";
-    const ns=JSON.stringify(n).replace(/\\/g,"\\\\").replace(/`/g,"\\`").replace(/\$/g,"\\$");
-    return `<div class="news-li" onclick='showNewsDetail(${ns})'>
-      <div class="news-li-title">${n.title||"(No title)"}</div>
-      <div class="news-li-meta">${badge}<span>${d.toLocaleDateString("hi-IN")}</span><span>${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}</span></div>
-      <button class="news-li-del" onclick="event.stopPropagation();deleteNewsById('${n._id}')">✕</button>
-    </div>`;
-  }).join("");
+  el.innerHTML=list.map(n=>{const d=new Date(n.savedAt);const badge=n.hasMcq?`<span class="news-li-mcq">${n.mcqs?.length||0} MCQ</span>`:"";const ns=JSON.stringify(n).replace(/\\/g,"\\\\").replace(/`/g,"\\`").replace(/\$/g,"\\$");return `<div class="news-li" onclick='showNewsDetail(${ns})'><div class="news-li-title">${n.title||"(No title)"}</div><div class="news-li-meta">${badge}<span>${d.toLocaleDateString("hi-IN")}</span></div><button class="news-li-del" onclick="event.stopPropagation();deleteNewsById('${n._id}')">✕</button></div>`;}).join("");
 }
-
-async function deleteNewsById(id){
-  if(!confirm("Delete?")) return;
-  await fetch("/api/news/"+id,{method:"DELETE"});
-  await fetchNews();
-  showNewsList();
-}
-function setMcqCount(btn,val){
-  selectedMcqCount=parseInt(val)||2;
-  document.querySelectorAll(".mcq-count-chip").forEach(b=>b.classList.remove("active"));
-  if(btn) btn.classList.add("active");
-}
-function newsReset(){
-  newsProcessed={paragraph:"",mcqs:[]};
-  document.getElementById("newsStep1").style.display="block";
-  document.getElementById("newsStep2").style.display="none";
-  document.getElementById("newsTitle").value="";
-  document.getElementById("newsContent").value="";
-}
+async function deleteNewsById(id){if(!confirm("Delete?")) return;await fetch("/api/news/"+id,{method:"DELETE"});await fetchNews();showNewsList();}
+function setMcqCount(btn,val){selectedMcqCount=parseInt(val)||2;document.querySelectorAll(".mcq-count-chip").forEach(b=>b.classList.remove("active"));if(btn) btn.classList.add("active");}
+function newsReset(){newsProcessed={paragraph:"",mcqs:[]};document.getElementById("newsStep1").style.display="block";document.getElementById("newsStep2").style.display="none";document.getElementById("newsTitle").value="";document.getElementById("newsContent").value="";}
 async function aiProcessNews(){
-  const title=document.getElementById("newsTitle").value.trim();
-  const content=document.getElementById("newsContent").value.trim();
-  if(!content) return showToast("Content daalo pehle!");
-  const btn=document.getElementById("newsAiBtn");
-  btn.textContent="⏳ AI improve kar raha hai..."; btn.disabled=true;
-  try{
-    const res=await fetch("/api/news/ai-process",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content})});
-    if(!res.ok) throw new Error("Server error "+res.status);
-    const d=await res.json();
-    newsProcessed={paragraph:d.paragraph||"",mcqs:d.mcqs||[]};
-    document.getElementById("newsStep1").style.display="none";
-    document.getElementById("newsStep2").style.display="block";
-    document.getElementById("newsParagraphBox").textContent=newsProcessed.paragraph;
-    if(newsProcessed.mcqs.length){
-      document.getElementById("newsMcqFound").style.display="block";
-      document.getElementById("newsMcqAsk").style.display="none";
-      document.getElementById("mcqCountLabel").textContent=newsProcessed.mcqs.length+" MCQs";
-      renderMcqBoxes(newsProcessed.mcqs);
-    } else {
-      document.getElementById("newsMcqFound").style.display="none";
-      document.getElementById("newsMcqAsk").style.display="block";
-    }
-    showToast("✅ AI ne improve kar diya!");
-  }catch(e){ showToast("❌ "+e.message); console.error(e); }
+  const title=document.getElementById("newsTitle").value.trim(),content=document.getElementById("newsContent").value.trim();
+  if(!content) return showToast("Content daalo!",true);
+  const btn=document.getElementById("newsAiBtn"); btn.textContent="⏳ Processing..."; btn.disabled=true;
+  try{const res=await fetch("/api/news/ai-process",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content})});if(!res.ok) throw new Error("Server error");const d=await res.json();newsProcessed={paragraph:d.paragraph||"",mcqs:d.mcqs||[]};document.getElementById("newsStep1").style.display="none";document.getElementById("newsStep2").style.display="block";document.getElementById("newsParagraphBox").textContent=newsProcessed.paragraph;if(newsProcessed.mcqs.length){document.getElementById("newsMcqFound").style.display="block";document.getElementById("newsMcqAsk").style.display="none";document.getElementById("mcqCountLabel").textContent=newsProcessed.mcqs.length+" MCQs";renderMcqBoxes(newsProcessed.mcqs);}else{document.getElementById("newsMcqFound").style.display="none";document.getElementById("newsMcqAsk").style.display="block";}showToast("✅ AI ne process kar diya!");}
+  catch(e){showToast("❌ "+e.message,true);}
   btn.textContent="🤖 AI se Improve Karo"; btn.disabled=false;
 }
-function renderMcqBoxes(mcqs){
-  document.getElementById("newsMcqBoxes").innerHTML=mcqs.map((q,i)=>`
-    <div class="news-mcq-item">
-      <div class="nmi-q">Q${i+1}. ${q.question}</div>
-      <div class="nmi-opts">${(q.options||[]).map(o=>`<div class="nmi-opt">${o}</div>`).join("")}</div>
-      <div class="nmi-ans">✓ ${q.answer}</div>
-      ${q.explanation?`<div class="nmi-exp">💡 ${q.explanation}</div>`:""}
-    </div>`).join("");
-}
+function renderMcqBoxes(mcqs){document.getElementById("newsMcqBoxes").innerHTML=mcqs.map((q,i)=>`<div style="background:var(--s3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:11px 13px;margin-bottom:8px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">Q${i+1}. ${q.question}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px">${(q.options||[]).map(o=>`<div style="background:var(--s2);padding:5px 8px;border-radius:5px;border:1px solid var(--border);font-size:11px">${o}</div>`).join("")}</div><div style="font-size:11px;font-weight:700;color:var(--green)">✓ ${q.answer}</div></div>`).join("");}
 async function genMcqFromParagraph(){
-  const btn=document.getElementById("genMcqBtn");
-  btn.textContent="⏳ Bana raha hoon..."; btn.disabled=true;
-  try{
-    const res=await fetch("/api/news/gen-mcq",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paragraph:newsProcessed.paragraph,count:selectedMcqCount})});
-    const d=await res.json();
-    newsProcessed.mcqs=d.mcqs||[];
-    document.getElementById("newsMcqAsk").style.display="none";
-    document.getElementById("newsMcqFound").style.display="block";
-    document.getElementById("mcqCountLabel").textContent=newsProcessed.mcqs.length+" MCQs";
-    renderMcqBoxes(newsProcessed.mcqs);
-    showToast(`✅ ${newsProcessed.mcqs.length} MCQs ban gaye!`);
-  }catch(e){ showToast("❌ "+e.message); }
+  const btn=document.getElementById("genMcqBtn"); btn.textContent="⏳ Bana raha hoon..."; btn.disabled=true;
+  try{const res=await fetch("/api/news/gen-mcq",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paragraph:newsProcessed.paragraph,count:selectedMcqCount})});const d=await res.json();newsProcessed.mcqs=d.mcqs||[];document.getElementById("newsMcqAsk").style.display="none";document.getElementById("newsMcqFound").style.display="block";document.getElementById("mcqCountLabel").textContent=newsProcessed.mcqs.length+" MCQs";renderMcqBoxes(newsProcessed.mcqs);showToast(`✅ ${newsProcessed.mcqs.length} MCQs ready!`);}
+  catch(e){showToast("❌ "+e.message,true);}
   btn.textContent="⚡ Banao"; btn.disabled=false;
 }
 async function fetchNews(){
-  const res=await fetch("/api/news");
-  allNewsData=await res.json();
+  const res=await fetch("/api/news"); allNewsData=await res.json();
   const topicSel=document.getElementById("newsFilterTopic");
-  if(topicSel){
-    const titles=[...new Set(allNewsData.map(n=>n.title).filter(Boolean))];
-    topicSel.innerHTML='<option value="">All Topics</option>'+titles.map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join("");
-  }
+  if(topicSel){const titles=[...new Set(allNewsData.map(n=>n.title).filter(Boolean))];topicSel.innerHTML='<option value="">All Topics</option>'+titles.map(t=>`<option value="${t.replace(/"/g,'&quot;')}">${t}</option>`).join("");}
   const cnt=document.getElementById("adminNewsCount");
   if(cnt) cnt.textContent=allNewsData.length+" news";
   renderNewsList(allNewsData);
@@ -844,241 +1067,317 @@ async function fetchNews(){
 async function postNews(){
   const title=document.getElementById("newsTitle").value.trim()||"News "+new Date().toLocaleDateString("hi-IN");
   const{paragraph,mcqs}=newsProcessed;
-  if(!paragraph) return showToast("Paragraph khaali hai!");
+  if(!paragraph) return showToast("Paragraph khaali hai!",true);
   const res=await fetch("/api/news",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title,content:paragraph,mcqs})});
-  if(res.ok){ showToast("📰 Posted! ✅"); await fetchNews(); showNewsList(); }
+  if(res.ok){showToast("📰 Posted! ✅");await fetchNews();showNewsList();}
 }
-async function deleteNews(id){ await deleteNewsById(id); }
 
-// ═══════════════════════
-// AI CHAT
-// ═══════════════════════
-function renderChatMsgs(){
-  const el = document.getElementById("chatMsgs");
-  if(!chatHistory.length){el.innerHTML='<div class="cmsg ai">Haan bolo! Koi bhi subject, topic poochho. Poori baat yaad rakhunga. 🎓</div>';return;}
-  el.innerHTML = chatHistory.map(m=>`<div class="cmsg ${m.role==="user"?"user":"ai"}">${m.content}</div>`).join("");
-  el.scrollTop = el.scrollHeight;
-}
+// ══ CHAT ══
+function renderChatMsgs(){const el=document.getElementById("chatMsgs");if(!chatHistory.length){el.innerHTML='<div class="cmsg ai">Haan bolo! 🎓</div>';return;}el.innerHTML=chatHistory.map(m=>`<div class="cmsg ${m.role==="user"?"user":"ai"}">${m.content}</div>`).join("");el.scrollTop=el.scrollHeight;}
 async function sendChat(){
-  const inp = document.getElementById("chatInput");
-  const text = inp.value.trim();
+  const inp=document.getElementById("chatInput"),text=inp.value.trim();
   if(!text) return;
   inp.value=""; inp.style.height="38px";
-  chatHistory.push({role:"user",content:text});
-  renderChatMsgs();
-  const msgs = document.getElementById("chatMsgs");
-  const t = document.createElement("div");
+  chatHistory.push({role:"user",content:text}); renderChatMsgs();
+  const msgs=document.getElementById("chatMsgs"),t=document.createElement("div");
   t.className="cmsg ai typing"; t.id="ctyping"; t.textContent="Soch raha hoon...";
   msgs.appendChild(t); msgs.scrollTop=msgs.scrollHeight;
-  try{
-    const res = await fetch("/api/admin/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:chatHistory})});
-    const d = await res.json();
-    document.getElementById("ctyping")?.remove();
-    chatHistory.push({role:"assistant",content:d.reply});
-    renderChatMsgs();
-  }catch(e){document.getElementById("ctyping")?.remove();chatHistory.push({role:"assistant",content:"Error."});renderChatMsgs();}
+  try{const res=await fetch("/api/admin/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:chatHistory})});const d=await res.json();document.getElementById("ctyping")?.remove();chatHistory.push({role:"assistant",content:d.reply});renderChatMsgs();}
+  catch(e){document.getElementById("ctyping")?.remove();chatHistory.push({role:"assistant",content:"Error."});renderChatMsgs();}
 }
-function chatKey(e){
-  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}
-  const inp=document.getElementById("chatInput");
-  inp.style.height="38px"; inp.style.height=Math.min(inp.scrollHeight,90)+"px";
-}
+function chatKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat();}const inp=document.getElementById("chatInput");inp.style.height="38px";inp.style.height=Math.min(inp.scrollHeight,90)+"px";}
 
-// ═══════════════════════
-// AI TEACHER
-// ═══════════════════════
+// ══ TEACHER ══
 async function loadTcTopics(){
-  const sub = document.getElementById("tcSubject").value;
-  const topicSel = document.getElementById("tcTopic");
+  const sub=document.getElementById("tcSubject").value,topicSel=document.getElementById("tcTopic");
   document.getElementById("tcQCount").textContent="";
   if(!sub){topicSel.innerHTML='<option value="">— Pehle subject choose karo —</option>';return;}
   topicSel.innerHTML='<option value="">Loading...</option>';
-  const res = await fetch(`/api/public/topics/${sub}`);
-  const topics = await res.json();
-  const total = topics.reduce((s,t)=>s+t.count,0);
+  const res=await fetch(`/api/public/topics/${sub}`);const topics=await res.json();
+  const total=topics.reduce((s,t)=>s+t.count,0);
   document.getElementById("tcQCount").textContent=`(${total}Q)`;
   topicSel.innerHTML='<option value="__all__">All Topics</option>'+topics.map(t=>`<option value="${escH(t.topic)}">${t.topic} (${t.count}Q)</option>`).join("");
 }
 async function generateTeacherQ(){
-  const sub=document.getElementById("tcSubject").value;
-  const topic=document.getElementById("tcTopic").value;
-  const count=parseInt(document.getElementById("tcCount").value)||4;
-  const type=document.getElementById("tcType").value;
-  if(!sub) return showToast("Subject choose karo!");
-  const btn=document.getElementById("tcGenBtn");
-  btn.textContent="⏳ Generating..."; btn.disabled=true;
+  const sub=document.getElementById("tcSubject").value,topic=document.getElementById("tcTopic").value,count=parseInt(document.getElementById("tcCount").value)||4,type=document.getElementById("tcType").value;
+  if(!sub) return showToast("Subject choose karo!",true);
+  const btn=document.getElementById("tcGenBtn"); btn.textContent="⏳ Generating..."; btn.disabled=true;
   let existingQs=[];
-  try{
-    const params=new URLSearchParams({subject:sub});
-    const hr=await fetch("/api/history?"+params);
-    const hd=await hr.json();
-    const filtered=topic&&topic!=="__all__"?hd.filter(r=>r.topic===topic):hd;
-    existingQs=filtered.flatMap(r=>r.data?.map(q=>q.question)||[]);
-  }catch(e){}
-  try{
-    const res=await fetch("/api/admin/teacher",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:sub,topic:topic==="__all__"?null:topic,count,type,existingQuestions:existingQs})});
-    const d=await res.json();
-    renderTeacherOutput(d.questions);
-  }catch(e){document.getElementById("teacherOutput").innerHTML=`<div class="empty"><div class="empty-icon">❌</div>Error</div>`;}
+  try{const hr=await fetch("/api/history?subject="+sub);const hd=await hr.json();const filtered=topic&&topic!=="__all__"?hd.filter(r=>r.topic===topic):hd;existingQs=filtered.flatMap(r=>r.data?.map(q=>q.question)||[]);}catch(e){}
+  try{const res=await fetch("/api/admin/teacher",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:sub,topic:topic==="__all__"?null:topic,count,type,existingQuestions:existingQs})});const d=await res.json();renderTeacherOutput(d.questions);}
+  catch(e){document.getElementById("teacherOutput").innerHTML=`<div class="empty"><div class="empty-icon">❌</div>Error</div>`;}
   btn.textContent="🚀 Generate Questions"; btn.disabled=false;
 }
 function renderTeacherOutput(questions){
   const out=document.getElementById("teacherOutput");
   if(!questions||!questions.length){out.innerHTML='<div class="empty"><div class="empty-icon">🤔</div>Koi questions nahi bane</div>';return;}
-  out.innerHTML=questions.map((q,i)=>{
-    const tl={mcq:"MCQ",tf:"True/False",fill:"Fill in Blank"}[q.type]||"MCQ";
-    const tc={mcq:"mcq",tf:"tf",fill:"fill"}[q.type]||"mcq";
-    const opts=q.options?.length?`<div class="tq-opts">${q.options.map(o=>`<div class="tq-opt">${o}</div>`).join("")}</div>`:"";
-    return `<div class="tq-box" style="animation-delay:${i*0.06}s">
-      <div class="tq-header"><span class="tq-num">Q ${String(i+1).padStart(2,"0")}</span><span class="tq-type ${tc}">${tl}</span></div>
-      <div class="tq-body">
-        <div class="tq-q">${q.question}</div>
-        ${opts}
-        <div class="tq-ans">✓ ${q.answer}</div>
-        ${q.explanation?`<div class="tq-explain">💡 ${q.explanation}</div>`:""}
-      </div>
+  out.innerHTML=questions.map((q,i)=>{const tl={mcq:"MCQ",tf:"T/F",fill:"Fill"}[q.type]||"MCQ",tc={mcq:"mcq",tf:"tf",fill:"fill"}[q.type]||"mcq";const opts=q.options?.length?`<div class="tq-opts">${q.options.map(o=>`<div class="tq-opt">${o}</div>`).join("")}</div>`:"";return `<div class="tq-box" style="animation-delay:${i*0.06}s"><div class="tq-header"><span class="tq-num">Q ${String(i+1).padStart(2,"0")}</span><span class="tq-type ${tc}">${tl}</span></div><div class="tq-body"><div class="tq-q">${q.question}</div>${opts}<div class="tq-ans">✓ ${q.answer}</div>${q.explanation?`<div class="tq-explain">💡 ${q.explanation}</div>`:""}</div></div>`;}).join("");
+}
+
+// ══ PARSE ══
+async function processData(){
+  const text=document.getElementById("userInput").value.trim();
+  if(!text) return;
+  const btn=event.target; btn.textContent="⏳ Parsing..."; btn.classList.add("loading");
+  try{const res=await fetch("/process",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});const result=await res.json();currentQA=result.qa;renderQuiz(currentQA);}
+  catch(e){alert("Parsing failed: "+e.message);}
+  btn.textContent="⚡ Parse Now"; btn.classList.remove("loading");
+}
+
+// ══ RENDER QUIZ — with section badge ══
+function renderQuiz(qaList){
+  const div=document.getElementById("quizResult");
+  if(!qaList||!qaList.length){div.innerHTML='<div class="empty"><div class="empty-icon">🤔</div>No questions found</div>';return;}
+  div.innerHTML=qaList.map((q,i)=>{
+    const sec = q.section || '';
+    const secColor = SEC_COLORS[sec] || 'var(--muted)';
+    const secBadge = sec ? `<span class="q-sec-badge" style="background:${secColor}20;color:${secColor};border:1px solid ${secColor}40">${SEC_SHORT[sec]||sec}</span>` : '';
+    const borderColor = SEC_COLORS[sec] || 'var(--accent)';
+    return `<div class="q-card" style="animation-delay:${i*0.04}s;border-left-color:${borderColor}">
+      <div class="q-num"><span style="font-family:var(--mono)">Q ${String(i+1).padStart(2,"0")}</span>${secBadge}</div>
+      <div class="q-text">${q.question}</div>
+      <div class="opt-grid">${q.options.map(o=>`<div class="opt-box">${o}</div>`).join("")}</div>
+      <div class="ans-tag">✓ ${q.answer}</div>
     </div>`;
   }).join("");
 }
 
-// ═══════════════════════
-// PARSE
-// ═══════════════════════
-async function processData(){
-  const text=document.getElementById("userInput").value.trim();
-  if(!text) return;
-  const btn=event.target;
-  btn.textContent="⏳ Parsing..."; btn.classList.add("loading");
-  try{
-    const res=await fetch("/process",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
-    const result=await res.json();
-    currentQA=result.qa; renderQuiz(currentQA);
-  }catch(e){alert("Parsing failed: "+e.message);}
-  btn.textContent="⚡ Parse Now"; btn.classList.remove("loading");
-}
-function renderQuiz(qaList){
-  const div=document.getElementById("quizResult");
-  if(!qaList||!qaList.length){div.innerHTML='<div class="empty"><div class="empty-icon">🤔</div>No questions found</div>';return;}
-  div.innerHTML=qaList.map((q,i)=>`
-    <div class="q-card" style="animation-delay:${i*0.04}s">
-      <div class="q-num">Q ${String(i+1).padStart(2,"0")}</div>
-      <div class="q-text">${q.question}</div>
-      <div class="opt-grid">${q.options.map(o=>`<div class="opt-box">${o}</div>`).join("")}</div>
-      <div class="ans-tag">✓ ${q.answer}</div>
-    </div>`).join("");
-}
-
-// ═══════════════════════
-// SAVE
-// ═══════════════════════
+// ══ SAVE ══
 async function saveToDB(){
   if(!currentQA) return alert("Pehle data parse karein!");
   const topic=document.getElementById("topicName").value.trim()||"Untitled";
   const subject=document.getElementById("subjectSelect").value||"other";
   const res=await fetch("/api/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({topic,subject,data:currentQA})});
-  if(res.ok){showToast("Saved! ✅");fetchHistory();}
+  const d=await res.json();
+  if(d.status==="merged") showToast(`✅ Merged! ${d.added} naye questions`);
+  else if(d.status==="no_new") showToast("⚠️ Saare questions pehle se exist karte hain");
+  else showToast("Saved! ✅");
+  fetchHistory();
 }
 
-// ═══════════════════════
-// HISTORY
-// ═══════════════════════
+// ══ HISTORY ══
 async function fetchHistory(){
   const res=await fetch("/api/history");
   allHistory=await res.json();
-  renderHistory(allHistory);
-  populateDropdown(allHistory);
+  renderHistory(allHistory); populateDropdown(allHistory);
 }
 function filterHistory(sub,btn){
   activeFilter=sub;
-  document.querySelectorAll(".stab").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
+  document.querySelectorAll(".stab").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
+  const bar=document.getElementById("addTopicBar"),lbl=document.getElementById("addTopicBarLabel");
+  if(sub&&sub!=="all"){bar.style.display="block";if(lbl) lbl.textContent=(allSubjectsMap[sub]||sub)+" mein Topic Add Karo";}
+  else{bar.style.display="none";}
   renderHistory(sub==="all"?allHistory:allHistory.filter(h=>h.subject===sub));
 }
+
+// ══ BASE TOPIC NAME — strip section suffixes ══
+// e.g. "CGL16SepS3-25T1 — English" → "CGL16SepS3-25T1"
+// e.g. "CGL16SepS3-25T1" → "CGL16SepS3-25T1"
+function getBaseTopic(topic) {
+  return (topic||'').replace(/\s*[—\-–]+\s*(Reasoning|GK|Quant|English|General Awareness|Quantitative Aptitude)\s*$/i, '').trim();
+}
+
+// ══ GROUP RECORDS by base topic + subject ══
+function groupHistory(list) {
+  const groups = {};
+  list.forEach(item => {
+    const base = getBaseTopic(item.topic);
+    const key = base + '||' + item.subject;
+    if (!groups[key]) {
+      groups[key] = {
+        baseTopic: base,
+        subject: item.subject,
+        ids: [],          // all record _ids in this group
+        allData: [],      // all questions merged
+        savedAt: item.savedAt,
+      };
+    }
+    groups[key].ids.push(item._id);
+    groups[key].allData = groups[key].allData.concat(item.data || []);
+    // Keep latest savedAt
+    if (new Date(item.savedAt) > new Date(groups[key].savedAt)) {
+      groups[key].savedAt = item.savedAt;
+    }
+  });
+  return Object.values(groups).sort((a,b) => new Date(b.savedAt) - new Date(a.savedAt));
+}
+
 function renderHistory(list){
-  document.getElementById("statTotal").textContent=list.length;
-  document.getElementById("statQ").textContent=list.reduce((s,h)=>s+(h.data?.length||0),0);
+  const grouped = groupHistory(list);
+  const totalQ = list.reduce((s,h)=>s+(h.data?.length||0),0);
+  document.getElementById("statTotal").textContent=grouped.length;
+  document.getElementById("statQ").textContent=totalQ;
   const div=document.getElementById("historyList");
-  if(!list.length){div.innerHTML='<div class="empty"><div class="empty-icon">📂</div>Koi record nahi</div>';return;}
-  const B={history:"Hist",geography:"Geo",polity:"Pol",currentaffairs:"CA",maths:"Math",science:"Sci",economics:"Eco",other:"Gen"};
-  div.innerHTML=list.map(item=>{
-    const d=new Date(item.savedAt);
-    return `<div class="h-item" onclick="loadRecord('${item._id}')">
-      <div class="h-topic">${item.topic}</div>
-      <div class="h-meta">
-        <span class="h-badge">${B[item.subject]||"Gen"}</span>
-        ${item.data?.length||0}Q •
-        ${d.toLocaleDateString("hi-IN")} ${d.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})}
-      </div>
+  if(!grouped.length){div.innerHTML='<div class="empty"><div class="empty-icon">📂</div>Koi record nahi</div>';return;}
+
+  div.innerHTML=grouped.map((grp,idx)=>{
+    const d=new Date(grp.savedAt);
+    const subLabel=allSubjectsMap[grp.subject]||grp.subject||"Gen";
+    const totalQ=grp.allData.length;
+
+    // Section counts
+    const secCounts = {'Reasoning':0,'General Awareness':0,'Quantitative Aptitude':0,'English':0};
+    grp.allData.forEach(q=>{ if(secCounts[q.section]!==undefined) secCounts[q.section]++; });
+    const secChips = Object.entries(secCounts).filter(([,c])=>c>0).map(([s,c])=>{
+      const color=SEC_COLORS[s]||'#fff';
+      const short=SEC_SHORT[s]||s;
+      return `<span class="h-sec-chip" style="background:${color}20;color:${color};border:1px solid ${color}40">${short}:${c}</span>`;
+    }).join('');
+
+    const grpKey = encodeURIComponent(grp.baseTopic+'||'+grp.subject);
+    return `<div class="h-item" id="hitem-${grpKey}" onclick="loadGroup('${escH(grp.baseTopic)}','${escH(grp.subject)}',this)">
+      <div class="h-topic">${grp.baseTopic}</div>
+      <div class="h-meta"><span class="h-badge">${subLabel.slice(0,4)}</span>${totalQ}Q • ${d.toLocaleDateString("hi-IN")}</div>
+      ${secChips?`<div class="h-sec-chips">${secChips}</div>`:''}
       <div class="h-actions">
-        <button class="h-topic-del" onclick="deleteByTopic(event,'${item.subject}','${escH(item.topic)}')" title="Delete all '${escH(item.topic)}' questions">🗑️ Topic</button>
-        <button class="h-del" onclick="deleteRec(event,'${item._id}')" title="Delete this record only">✕</button>
+        <button class="h-topic-del" onclick="deleteGroupTopic(event,'${escH(grp.baseTopic)}','${escH(grp.subject)}')" title="Delete topic">🗑️</button>
       </div>
     </div>`;
   }).join("");
 }
+
 function populateDropdown(list){
   const drop=document.getElementById("dbDropdown");
   drop.innerHTML='<option value="">-- Saved record choose karein --</option>';
-  list.forEach(item=>{
+  const grouped = groupHistory(list);
+  grouped.forEach(grp=>{
     const opt=document.createElement("option");
-    opt.value=JSON.stringify(item.data);
-    opt.textContent=`[${(item.subject||"").toUpperCase()}] ${item.topic}`;
+    opt.value=JSON.stringify(grp.allData);
+    opt.textContent=`[${(grp.subject||"").toUpperCase()}] ${grp.baseTopic}`;
     drop.appendChild(opt);
   });
 }
-function loadRecord(id){
-  const item=allHistory.find(h=>h._id===id);
-  if(!item) return;
-  currentQA=item.data; renderQuiz(item.data);
-  document.querySelectorAll(".h-item").forEach(el=>el.classList.remove("active"));
-  event.currentTarget.classList.add("active");
+
+// ══ DELETE GROUP (all records with same base topic) ══
+async function deleteGroupTopic(e, baseTopic, subject) {
+  e.stopPropagation();
+  if(!confirm(`"${baseTopic}" ke saare records delete karein?`)) return;
+  // Find all matching records
+  const matching = allHistory.filter(h => getBaseTopic(h.topic) === baseTopic && h.subject === subject);
+  for(const rec of matching) {
+    await fetch("/api/history/"+rec._id, {method:"DELETE"});
+  }
+  showToast(`✅ ${matching.length} records deleted`);
+  fetchHistory();
+}
+
+// ══════════════════════════════════════════════════════════
+// LOAD GROUP — merge all records with same base topic
+// ══════════════════════════════════════════════════════════
+function loadGroup(baseTopic, subject, el) {
+  // Find all records matching this base topic
+  const matching = allHistory.filter(h =>
+    getBaseTopic(h.topic) === baseTopic &&
+    (subject === '' || h.subject === subject || activeFilter === 'all')
+  );
+
+  // Merge all questions
+  let allQ = [];
+  matching.forEach(rec => { allQ = allQ.concat(rec.data || []); });
+
+  // Sort: Reasoning → GK → Quant → English, then by qNumInt
+  const SEC_ORDER = {'Reasoning':0,'General Awareness':1,'Quantitative Aptitude':2,'English':3};
+  allQ.sort((a,b)=>{
+    const ao=SEC_ORDER[a.section]!==undefined?SEC_ORDER[a.section]:9;
+    const bo=SEC_ORDER[b.section]!==undefined?SEC_ORDER[b.section]:9;
+    return ao!==bo ? ao-bo : (a.qNumInt||0)-(b.qNumInt||0);
+  });
+
+  currentTopicQuestions = allQ;
+  currentTopicSubject = subject;
+  currentTopicName = baseTopic;
+  activeSectionFilter = 'all';
+  currentQA = allQ;
+
+  // Show section filter bar
+  const secBar = document.getElementById('secFilterBar');
+  if(secBar) secBar.style.display = 'flex';
+
+  // Update section counts
+  updateSectionFilterCounts(allQ);
+
+  // Reset filter buttons
+  document.querySelectorAll('.sec-btn').forEach(b => {
+    b.className = 'sec-btn';
+    b.style.cssText = '';
+  });
+  const sfAll = document.getElementById('sfAll');
+  if(sfAll) { sfAll.className = 'sec-btn active-all'; }
+  if(document.getElementById('sfReas')) document.getElementById('sfReas').style.cssText='color:var(--c-reasoning);border-color:rgba(0,212,255,0.25)';
+  if(document.getElementById('sfGK')) document.getElementById('sfGK').style.cssText='color:var(--c-gk);border-color:rgba(251,191,36,0.25)';
+  if(document.getElementById('sfQuant')) document.getElementById('sfQuant').style.cssText='color:var(--c-quant);border-color:rgba(0,230,118,0.25)';
+  if(document.getElementById('sfEng')) document.getElementById('sfEng').style.cssText='color:var(--c-english);border-color:rgba(199,119,255,0.25)';
+
+  renderFilteredQuestions();
+
+  document.querySelectorAll(".h-item").forEach(e=>e.classList.remove("active"));
+  if(el) el.classList.add("active");
   if(window.innerWidth<=900) switchPanel(0,document.querySelectorAll(".ptab")[0]);
   closeSb();
 }
-function loadFromDropdown(){
-  const val=document.getElementById("dbDropdown").value;
-  if(val){currentQA=JSON.parse(val);renderQuiz(currentQA);}
-}
-async function deleteRec(e,id){
-  e.stopPropagation();
-  if(!confirm("Delete this record?")) return;
-  await fetch("/api/history/"+id,{method:"DELETE"});
-  fetchHistory();
-}
-async function deleteByTopic(e,subject,topic){
-  e.stopPropagation();
-  if(!confirm(`"${topic}" ke saare records delete karein? Yeh sirf is topic ka content hatayega.`)) return;
-  const res=await fetch("/api/topic",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject,topic})});
-  const d=await res.json();
-  showToast(`${d.deleted} records deleted ✅`);
-  fetchHistory();
+
+// Keep old loadRecord for compatibility (dropdown uses it)
+function loadRecord(id){
+  const item=allHistory.find(h=>h._id===id);
+  if(!item) return;
+  loadGroup(getBaseTopic(item.topic), item.subject, null);
 }
 
-// ═══════════════════════
-// STORY
-// ═══════════════════════
+function loadFromDropdown(){
+  const val=document.getElementById("dbDropdown").value;
+  if(val){
+    currentTopicQuestions=JSON.parse(val);
+    currentQA=currentTopicQuestions;
+    activeSectionFilter='all';
+    updateSectionFilterCounts(currentTopicQuestions);
+    document.getElementById('secFilterBar').style.display='flex';
+    renderFilteredQuestions();
+  }
+}
+async function deleteRec(e,id){e.stopPropagation();if(!confirm("Delete this record?")) return;await fetch("/api/history/"+id,{method:"DELETE"});fetchHistory();}
+async function deleteByTopic(e,subject,topic){e.stopPropagation();if(!confirm(`"${topic}" ke saare records delete karein?`)) return;const res=await fetch("/api/topic",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject,topic})});const d=await res.json();showToast(`${d.deleted} records deleted ✅`);fetchHistory();}
+
+// ══ STORY ══
 async function buildStory(){
   if(!currentQA) return alert("Pehle koi topic select karein!");
-  const btn=event.target;
-  btn.textContent="⏳ Generating..."; btn.classList.add("loading");
+  const btn=event.target; btn.textContent="⏳ Generating..."; btn.classList.add("loading");
   const res=await fetch("/story",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:currentQA})});
   const result=await res.json();
-  const sd=document.getElementById("storyDisplay");
-  sd.textContent=result.story; sd.style.display="block";
+  const sd=document.getElementById("storyDisplay"); sd.textContent=result.story; sd.style.display="block";
   btn.textContent="🧠 Create AI Guide"; btn.classList.remove("loading");
 }
 
-// ═══════════════════════
-// HELPERS
-// ═══════════════════════
+// ══ HELPERS ══
 function escH(s){return (s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/'/g,"&#39;")}
-function showToast(msg){
-  const t=document.getElementById("toast");
-  t.textContent=msg; t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"),2500);
+function showToast(msg,isErr=false){
+  const t=document.getElementById("toast"); t.textContent=msg;
+  t.classList.remove("err"); if(isErr) t.classList.add("err");
+  t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),3000);
 }
 
-window.onload=()=>{fetchHistory();fetchNotifs();};
+// ══ AI NEWS (minimal) ══
+function anUpdateTime(){const now=new Date();const dc=document.getElementById("anDateChip"),tc=document.getElementById("anTimeChip");if(dc) dc.textContent="📅 "+now.toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"});if(tc) tc.textContent="🕐 "+now.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true}).toUpperCase();}
+setInterval(anUpdateTime,1000);
+function anSwitchTab(viewId,btn){document.querySelectorAll(".an-view").forEach(v=>v.classList.remove("active"));document.querySelectorAll(".an-tab").forEach(b=>b.classList.remove("active"));document.getElementById(viewId).classList.add("active");btn.classList.add("active");if(viewId==="anHistView") loadAnHistory();}
+async function runAnFetch(){
+  const prompt=document.getElementById("anPrompt").value.trim();
+  if(!prompt) return showToast("Prompt likho!",true);
+  const btn=document.getElementById("anGenBtn"); btn.textContent="⏳ Fetching..."; btn.disabled=true;
+  document.getElementById("anOutput").innerHTML='<div class="empty loading"><div class="empty-icon">📡</div>Search ho rahi hai...</div>';
+  try{const res=await fetch("/api/ainews/fetch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});if(!res.ok) throw new Error("Server error "+res.status);const d=await res.json();document.getElementById("anTokenChip").textContent="🪙 "+(d.tokens?.total||"?")+" tokens";document.getElementById("anTimeUsed").textContent="⏱ "+(d.timeTaken||"?")+"s";const topics=d.topics||[];document.getElementById("anOutput").innerHTML=topics.length?topics.map((t,i)=>`<div class="an-topic-card" style="animation-delay:${i*0.03}s"><div style="font-size:10px;color:var(--gold);font-family:var(--mono);margin-bottom:3px">${String(i+1).padStart(2,"0")}</div><div class="an-topic-title">${t.title}</div><div class="an-topic-summary">${t.summary}</div></div>`).join(""):'<div class="empty"><div class="empty-icon">😔</div>Koi result nahi</div>';showToast("✅ "+topics.length+" results!");}
+  catch(e){document.getElementById("anOutput").innerHTML=`<div class="empty"><div class="empty-icon">❌</div>${e.message}</div>`;showToast("❌ "+e.message,true);}
+  btn.textContent="📡 Fetch News"; btn.disabled=false;
+}
+async function loadAnHistory(){const el=document.getElementById("anHistList");if(!el) return;el.innerHTML='<div class="empty"><div class="empty-icon">⌛</div>Loading...</div>';try{const res=await fetch("/api/ainews/results");const results=await res.json();if(!results.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div>Koi history nahi</div>';return;}el.innerHTML=results.map(r=>{const d=new Date(r.savedAt);return `<div class="an-topic-card" style="cursor:default"><div style="font-size:10px;color:var(--purple);font-family:var(--mono);margin-bottom:4px">${d.toLocaleString("en-IN")}</div><div style="font-size:12px;color:var(--muted)">${escH(r.prompt||"")}</div><div style="font-size:11px;color:var(--text);margin-top:4px">${(r.topics||[]).length} topics</div></div>`;}).join("");}catch(e){el.innerHTML=`<div class="empty"><div class="empty-icon">❌</div>${e.message}</div>`;}}
+
+socket.on("ainews_result",function(d){showToast("📡 AI News: "+(d.topics?.length||0)+" results!");});
+
+// ══ INIT ══
+window.onload=async()=>{
+  await loadSubjects();
+  fetchHistory(); fetchNotifs(); fetchNews();
+  startTimer();
+};
 </script>
 </body>
 </html>
