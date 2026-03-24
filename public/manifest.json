@@ -3,8 +3,8 @@
   "short_name": "QuizPortal",
   "start_url": "/public",
   "display": "standalone",
-  "background_color": "#1a1a1a",
-  "theme_color": "#4f46e5",
+  "background_color": "#07090f",
+  "theme_color": "#07090f",
   "icons": [
     {
       "src": "/icon-192.png",
